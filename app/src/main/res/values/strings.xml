@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">DeviceTracker</string>
+    <string name="maps_api_key">YOUR_MAPS_API_KEY_HERE</string>
+    <string name="permission_location_rationale">Location permission is required to show your device on the map and track other devices.</string>
+    <string name="permission_background_location_rationale">Background location permission is required to update your position even when the app is not in use.</string>
+    <string name="permission_notification_rationale">Notification permission is required for the location tracking service.</string>
+    <string name="location_service_channel_name">Location Tracking</string>
+    <string name="location_service_channel_description">Keeps track of your device location</string>
+    <string name="location_alert_channel_name">Location Alerts</string>
+    <string name="location_alert_channel_description">Location failures and important alerts</string>
+    <string name="location_service_title">Tracking your location</string>
+    <string name="location_service_text">Your location is being shared with other devices</string>
+    <string name="location_failed_title">Location update failed</string>
+    <string name="location_failed_text">Unable to get valid location (%1$d): %2$s</string>
+    <string name="my_location">My Location</string>
+    <string name="device_count">Devices: %d</string>
+    <string name="online">Online</string>
+    <string name="offline">Offline</string>
+    <string name="last_seen">Last seen: %s</string>
+    <string name="this_device">This Device</string>
+    <string name="unknown_device">Unknown Device</string>
+    <string name="track_recording">Track Recording</string>
+    <string name="start_tracking">Start Tracking</string>
+    <string name="stop_tracking">Stop Tracking</string>
+    <string name="track_info">Points: %d | Distance: %.2f km</string>
+    <string name="tracking_started">Tracking started</string>
+    <string name="tracking_stopped">Tracking stopped</string>
+    <string name="device_list_title">Device List</string>
+    <string name="view_track">View Track</string>
+    <string name="export_today_timeline">Export Timeline</string>
+    <string name="track_map_title">Track</string>
+    <string name="close">Close</string>
+    <string name="export_failed">Export failed: %1$s</string>
+    <string name="export_empty_timeline">No timeline data today</string>
+    <string name="export_file_prefix">timeline</string>
+    <string name="share_timeline_title">Share timeline</string>
+</resources>
