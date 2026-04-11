@@ -1,7 +1,6 @@
 package com.dzf.app.ui
 
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -17,6 +16,7 @@ import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -65,6 +65,34 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val requestLocationPermissionsLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grantMap ->
+            val allGranted = grantMap.values.all { it }
+            if (allGranted) {
+                if (!PermissionHelper.hasBackgroundLocationPermission(this) &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+                ) {
+                    showBackgroundPermissionDialog()
+                } else {
+                    onMapReady()
+                }
+            } else {
+                Toast.makeText(this, "Location permission is required for this app to work", Toast.LENGTH_LONG).show()
+            }
+        }
+
+    private val requestBackgroundPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (!granted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                Toast.makeText(
+                    this,
+                    "Background location denied. Upload may pause in background.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            onMapReady()
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -108,33 +136,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkPermissionsAndStart() {
         if (!PermissionHelper.hasLocationPermission(this)) {
-            PermissionHelper.requestLocationPermission(this)
+            requestLocationPermissionsLauncher.launch(PermissionHelper.requiredPermissions())
         } else if (!PermissionHelper.hasBackgroundLocationPermission(this)) {
-            PermissionHelper.requestBackgroundLocationPermission(this)
+            showBackgroundPermissionDialog()
         } else {
             onMapReady()
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        val allGranted = grantResults.all { it == PackageManager.PERMISSION_GRANTED }
-        if (allGranted) {
-            if (!PermissionHelper.hasBackgroundLocationPermission(this) &&
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                showBackgroundPermissionDialog()
-            } else {
-                startLocationUpdates()
-                startLocationService()
-                loadDeviceLocations()
-                handler.postDelayed(refreshRunnable, refreshInterval)
-            }
-        } else {
-            Toast.makeText(this, "Location permission is required for this app to work", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -143,13 +149,10 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Background Location")
             .setMessage("To keep your location updated when the app is in the background, please enable 'Allow all the time' location permission in the next screen.")
             .setPositiveButton("Grant") { _, _ ->
-                PermissionHelper.requestBackgroundLocationPermission(this)
+                requestBackgroundPermissionLauncher.launch(PermissionHelper.backgroundLocationPermission())
             }
             .setNegativeButton("Skip") { _, _ ->
-                startLocationUpdates()
-                startLocationService()
-                loadDeviceLocations()
-                handler.postDelayed(refreshRunnable, refreshInterval)
+                onMapReady()
             }
             .show()
     }

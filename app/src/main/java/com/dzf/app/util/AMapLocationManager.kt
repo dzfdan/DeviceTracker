@@ -152,7 +152,7 @@ class AMapLocationManager(
             }
 
             timeoutHandler.postDelayed(timeoutRunnable, 20_000L)
-            locationManager.requestSingleUpdate(provider, oneShotListener, mainLooper)
+            locationManager.requestLocationUpdates(provider, 0L, 0f, oneShotListener, mainLooper)
         } catch (se: SecurityException) {
             onError(ERROR_PERMISSION, "Missing location permission")
             onResult(null)

@@ -52,6 +52,7 @@ class LocationTrackingService : Service() {
     private val confirmRadiusMeters = 60f
     private val requiredConfirmCountBase = 2
     private val errorNotifyCooldownMs = 60_000L
+    private val maxFallbackLocationAgeMs = 15 * 60_000L
 
     override fun onCreate() {
         super.onCreate()
@@ -68,6 +69,9 @@ class LocationTrackingService : Service() {
             onError = { code, info ->
                 Log.e(TAG, "Location error: code=$code, info=$info")
                 notifyLocationFailure(code, info)
+                if (code == 3) {
+                    tryUploadLastKnownLocation(code, info)
+                }
                 if (code == 12 || code == 11 || code == 1 || code == 8) {
                     locationManager.restartLocation()
                 }
@@ -107,11 +111,19 @@ class LocationTrackingService : Service() {
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
-        alarmManager.setExact(
-            android.app.AlarmManager.ELAPSED_REALTIME,
-            SystemClock.elapsedRealtime() + 3000,
-            pendingIntent
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(
+                android.app.AlarmManager.ELAPSED_REALTIME,
+                SystemClock.elapsedRealtime() + 3000,
+                pendingIntent
+            )
+        } else {
+            alarmManager.setExact(
+                android.app.AlarmManager.ELAPSED_REALTIME,
+                SystemClock.elapsedRealtime() + 3000,
+                pendingIntent
+            )
+        }
     }
 
     private fun ensureForegroundMode() {
@@ -223,16 +235,22 @@ class LocationTrackingService : Service() {
                 try {
                     if (!AppLifecycleState.isInForeground()) {
                         val now = System.currentTimeMillis()
-                        if (now - lastBackgroundRequestTime >= backgroundUploadIntervalMs) {
+                        val elapsed = now - lastBackgroundRequestTime
+                        if (elapsed >= backgroundUploadIntervalMs) {
                             lastBackgroundRequestTime = now
+                            Log.d(
+                                TAG,
+                                "Background one-shot request started, elapsed=${elapsed}ms, interval=${backgroundUploadIntervalMs}ms"
+                            )
                             locationManager.requestOnceLocation { oneShot ->
                                 if (oneShot != null) {
                                     onLocationReceived(oneShot)
                                 } else {
-                                    val code = -1
-                                    val info = "Unknown"
-                                    notifyLocationFailure(code, info)
-                                    Log.w(TAG, "Background one-shot location failed: code=$code, info=$info")
+                                    Log.w(
+                                        TAG,
+                                        "Background one-shot location returned null. " +
+                                        "Failure reason should already be logged by location manager onError."
+                                    )
                                 }
                             }
                         }
@@ -240,7 +258,7 @@ class LocationTrackingService : Service() {
                 } catch (e: Exception) {
                     Log.w(TAG, "Background ticker error", e)
                 }
-                delay(60_000)
+                delay(10_000)
             }
         }
     }
@@ -270,7 +288,9 @@ class LocationTrackingService : Service() {
 
     private fun notifyLocationFailure(code: Int, info: String) {
         val now = System.currentTimeMillis()
+        Log.e(TAG, "notifyLocationFailure: code=$code, info=$info")
         if (now - lastErrorNotifyTime < errorNotifyCooldownMs) {
+            Log.w(TAG, "Location failure notification suppressed by cooldown")
             return
         }
         lastErrorNotifyTime = now
@@ -286,6 +306,31 @@ class LocationTrackingService : Service() {
             .build()
 
         NotificationManagerCompat.from(this).notify(LOCATION_ERROR_NOTIFICATION_ID, notification)
+        Log.e(TAG, "Location failure notification posted")
+    }
+
+    private fun tryUploadLastKnownLocation(code: Int, info: String) {
+        val fallback = locationManager.getLastKnownLocation()
+        if (fallback == null) {
+            Log.w(TAG, "Timeout fallback skipped: no last known location. code=$code, info=$info")
+            return
+        }
+
+        val now = System.currentTimeMillis()
+        val locationAgeMs = now - fallback.time
+        if (locationAgeMs > maxFallbackLocationAgeMs) {
+            Log.w(
+                TAG,
+                "Timeout fallback skipped: last known location too old (${locationAgeMs}ms). code=$code, info=$info"
+            )
+            return
+        }
+
+        Log.w(
+            TAG,
+            "Timeout fallback using last known location: age=${locationAgeMs}ms, provider=${fallback.provider}"
+        )
+        onLocationReceived(fallback)
     }
 
     private fun buildNotification(): Notification {
