@@ -34,4 +34,5 @@
     <string name="export_empty_timeline">No timeline data today</string>
     <string name="export_file_prefix">timeline</string>
     <string name="share_timeline_title">Share timeline</string>
+    <string name="map_load_timeout_hint">Map is taking too long to load. Please check AMAP key and network connection.</string>
 </resources>

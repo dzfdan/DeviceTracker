@@ -51,17 +51,27 @@ class MainActivity : AppCompatActivity() {
 
     private val markers = mutableMapOf<String, Marker>()
     private lateinit var deviceId: String
+    private var isMapLoaded = false
+    private var hasStartedTracking = false
 
     private val trackPoints = mutableListOf<LatLng>()
     private var trackPolyline: com.amap.api.maps.model.Polyline? = null
     private var isTracking = false
 
     private val refreshInterval: Long = 15000
+    private val mapLoadTimeoutMs: Long = 8_000
 
     private val refreshRunnable = object : Runnable {
         override fun run() {
             loadDeviceLocations()
             handler.postDelayed(this, refreshInterval)
+        }
+    }
+
+    private val mapLoadTimeoutRunnable = Runnable {
+        if (!isMapLoaded) {
+            Log.w(TAG, "Map load timeout. Please verify AMAP_KEY and network.")
+            Toast.makeText(this, getString(R.string.map_load_timeout_hint), Toast.LENGTH_LONG).show()
         }
     }
 
@@ -74,7 +84,7 @@ class MainActivity : AppCompatActivity() {
                 ) {
                     showBackgroundPermissionDialog()
                 } else {
-                    onMapReady()
+                    maybeStartTracking()
                 }
             } else {
                 Toast.makeText(this, "Location permission is required for this app to work", Toast.LENGTH_LONG).show()
@@ -90,7 +100,7 @@ class MainActivity : AppCompatActivity() {
                     Toast.LENGTH_LONG
                 ).show()
             }
-            onMapReady()
+            maybeStartTracking()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -116,22 +126,29 @@ class MainActivity : AppCompatActivity() {
         binding.trackCard.visibility = View.GONE
 
         aMap.setOnMapLoadedListener {
+            isMapLoaded = true
+            handler.removeCallbacks(mapLoadTimeoutRunnable)
             Log.d(TAG, "Map loaded successfully")
-            checkPermissionsAndStart()
+            maybeStartTracking()
         }
 
         binding.deviceCountCard.setOnClickListener {
             startActivity(Intent(this, DeviceListActivity::class.java))
         }
+
+        checkPermissionsAndStart()
+        handler.postDelayed(mapLoadTimeoutRunnable, mapLoadTimeoutMs)
     }
 
-    private fun onMapReady() {
-        if (PermissionHelper.hasLocationPermission(this)) {
-            startLocationUpdates()
-            startLocationService()
-            loadDeviceLocations()
-            handler.postDelayed(refreshRunnable, refreshInterval)
-        }
+    private fun maybeStartTracking() {
+        if (hasStartedTracking || !isMapLoaded) return
+        if (!PermissionHelper.hasLocationPermission(this)) return
+
+        hasStartedTracking = true
+        startLocationUpdates()
+        startLocationService()
+        loadDeviceLocations()
+        handler.postDelayed(refreshRunnable, refreshInterval)
     }
 
     private fun checkPermissionsAndStart() {
@@ -140,7 +157,7 @@ class MainActivity : AppCompatActivity() {
         } else if (!PermissionHelper.hasBackgroundLocationPermission(this)) {
             showBackgroundPermissionDialog()
         } else {
-            onMapReady()
+            maybeStartTracking()
         }
     }
 
@@ -152,7 +169,7 @@ class MainActivity : AppCompatActivity() {
                 requestBackgroundPermissionLauncher.launch(PermissionHelper.backgroundLocationPermission())
             }
             .setNegativeButton("Skip") { _, _ ->
-                onMapReady()
+                maybeStartTracking()
             }
             .show()
     }
@@ -580,6 +597,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         binding.mapView.onDestroy()
+        handler.removeCallbacks(mapLoadTimeoutRunnable)
         handler.removeCallbacks(refreshRunnable)
         scope.cancel()
     }
