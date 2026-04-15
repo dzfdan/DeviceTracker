@@ -33,6 +33,7 @@ import com.dzf.app.model.DeviceLocation
 import com.dzf.app.service.CloudBaseRepository
 import com.dzf.app.service.LocationTrackingService
 import com.dzf.app.util.AMapLocationManager
+import com.dzf.app.util.CoordinateTransform
 import com.dzf.app.util.DeviceInfoHelper
 import com.dzf.app.util.PermissionHelper
 import kotlinx.coroutines.*
@@ -187,7 +188,8 @@ class MainActivity : AppCompatActivity() {
             },
             onError = { code, info ->
                 Log.e(TAG, "Location error: code=$code, info=$info")
-            }
+            },
+            updateIntervalMs = 1_000L
         )
         locationManager?.startLocation()
     }
@@ -201,7 +203,8 @@ class MainActivity : AppCompatActivity() {
     private val myRequiredConfirmCount = 2
 
     private fun updateMyLocationOnMap(location: Location) {
-        val rawLatLng = LatLng(location.latitude, location.longitude)
+        val (gcjLat, gcjLng) = CoordinateTransform.wgs84ToGcj02(location.latitude, location.longitude)
+        val rawLatLng = LatLng(gcjLat, gcjLng)
         val latLng = stabilizeMyLocation(rawLatLng) ?: return
         Log.d(TAG, "Updating my location on map: lat=${latLng.latitude}, lng=${latLng.longitude}")
 

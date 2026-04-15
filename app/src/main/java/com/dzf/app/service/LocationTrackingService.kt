@@ -20,6 +20,7 @@ import com.dzf.app.R
 import com.dzf.app.model.DeviceLocation
 import com.dzf.app.util.AMapLocationManager
 import com.dzf.app.util.AppLifecycleState
+import com.dzf.app.util.CoordinateTransform
 import com.dzf.app.util.DeviceInfoHelper
 import kotlinx.coroutines.*
 
@@ -132,6 +133,7 @@ class LocationTrackingService : Service() {
 
     private fun onLocationReceived(location: Location) {
         Log.d(TAG, "Location received: lat=${location.latitude}, lng=${location.longitude}, accuracy=${location.accuracy}")
+        val (gcjLat, gcjLng) = CoordinateTransform.wgs84ToGcj02(location.latitude, location.longitude)
         val now = System.currentTimeMillis()
         val elapsedSinceLastUpload = now - lastUploadTime
 
@@ -149,7 +151,7 @@ class LocationTrackingService : Service() {
         val prevLng = lastUploadedLongitude
         if (prevLat != null && prevLng != null) {
             val distance = FloatArray(1)
-            Location.distanceBetween(prevLat, prevLng, location.latitude, location.longitude, distance)
+            Location.distanceBetween(prevLat, prevLng, gcjLat, gcjLng, distance)
             val shouldKeepAliveUpload = elapsedSinceLastUpload >= maxNoUploadIntervalMs
             if (distance[0] < minUploadDistanceMeters) {
                 if (!shouldKeepAliveUpload) {
@@ -176,20 +178,20 @@ class LocationTrackingService : Service() {
                 val candLat = pendingLatitude
                 val candLng = pendingLongitude
                 if (candLat == null || candLng == null) {
-                    pendingLatitude = location.latitude
-                    pendingLongitude = location.longitude
+                    pendingLatitude = gcjLat
+                    pendingLongitude = gcjLng
                     pendingCount = 1
                     Log.d(TAG, "Pending new position: waiting for confirmation")
                     return
                 }
 
                 val confirmDistance = FloatArray(1)
-                Location.distanceBetween(candLat, candLng, location.latitude, location.longitude, confirmDistance)
+                Location.distanceBetween(candLat, candLng, gcjLat, gcjLng, confirmDistance)
                 if (confirmDistance[0] <= confirmRadiusMeters) {
                     pendingCount += 1
                 } else {
-                    pendingLatitude = location.latitude
-                    pendingLongitude = location.longitude
+                    pendingLatitude = gcjLat
+                    pendingLongitude = gcjLng
                     pendingCount = 1
                     Log.d(TAG, "Pending position changed: reset confirmation")
                     return
@@ -205,8 +207,8 @@ class LocationTrackingService : Service() {
         val deviceLocation = DeviceLocation(
             deviceId = deviceId,
             deviceName = deviceName,
-            latitude = location.latitude,
-            longitude = location.longitude,
+            latitude = gcjLat,
+            longitude = gcjLng,
             timestamp = now,
             isOnline = true
         )
@@ -216,8 +218,8 @@ class LocationTrackingService : Service() {
             result.fold(
                 onSuccess = {
                     lastUploadTime = now
-                    lastUploadedLatitude = location.latitude
-                    lastUploadedLongitude = location.longitude
+                    lastUploadedLatitude = gcjLat
+                    lastUploadedLongitude = gcjLng
                     pendingLatitude = null
                     pendingLongitude = null
                     pendingCount = 0

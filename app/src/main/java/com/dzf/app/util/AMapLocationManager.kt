@@ -14,7 +14,8 @@ import android.util.Log
 class AMapLocationManager(
     private val context: Context,
     private val onLocationChanged: (Location) -> Unit,
-    private val onError: (Int, String) -> Unit = { _, _ -> }
+    private val onError: (Int, String) -> Unit = { _, _ -> },
+    private val updateIntervalMs: Long = 10_000L
 ) {
     private val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val mainLooper = Looper.getMainLooper()
@@ -53,9 +54,9 @@ class AMapLocationManager(
 
         continuousListener = listener
         try {
-            locationManager.requestLocationUpdates(provider, 10_000L, 0f, listener, mainLooper)
+            locationManager.requestLocationUpdates(provider, updateIntervalMs, 0f, listener, mainLooper)
             getLastKnownLocation()?.let { onLocationChanged(it) }
-            Log.d(TAG, "Started system location updates with provider=$provider")
+            Log.d(TAG, "Started system location updates with provider=$provider, interval=${updateIntervalMs}ms")
         } catch (se: SecurityException) {
             Log.e(TAG, "Missing location permission", se)
             onError(ERROR_PERMISSION, "Missing location permission")
