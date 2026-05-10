@@ -34,6 +34,7 @@ class DeviceListAdapter(
     class DeviceViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val nameText: TextView = itemView.findViewById(R.id.deviceNameText)
         private val idText: TextView = itemView.findViewById(R.id.deviceIdText)
+        private val statusChip: TextView = itemView.findViewById(R.id.deviceStatusChip)
         private val statusText: TextView = itemView.findViewById(R.id.deviceStatusText)
         private val trackButton: MaterialButton = itemView.findViewById(R.id.trackButton)
         private val exportButton: MaterialButton = itemView.findViewById(R.id.exportButton)
@@ -44,11 +45,14 @@ class DeviceListAdapter(
             onTrackClick: (DeviceLocation) -> Unit,
             onExportClick: (DeviceLocation) -> Unit
         ) {
-            nameText.text = item.deviceName.ifBlank { "Unknown Device" }
-            idText.text = "ID: ${item.deviceId}"
-            val state = if (item.isOnline) "Online" else "Offline"
+            val context = itemView.context
+            val state = if (item.isOnline) context.getString(R.string.online) else context.getString(R.string.offline)
             val time = timeFormat.format(Date(item.timestamp))
-            statusText.text = "$state  |  $time"
+            nameText.text = item.deviceName.ifBlank { context.getString(R.string.unknown_device) }
+            idText.text = context.getString(R.string.device_id_value, item.deviceId)
+            statusChip.text = state
+            statusChip.setBackgroundResource(if (item.isOnline) R.drawable.bg_chip_status_online else R.drawable.bg_chip_status_offline)
+            statusText.text = context.getString(R.string.last_seen, time)
             trackButton.setOnClickListener {
                 onTrackClick(item)
             }

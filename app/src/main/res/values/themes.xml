@@ -1,9 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <style name="Theme.DeviceTracker" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimary">@color/accent_icy</item>
+        <item name="colorSecondary">@color/accent_blue</item>
+        <item name="colorSurface">@color/surface_primary</item>
+        <item name="colorBackground">@color/surface_primary</item>
+        <item name="colorOnPrimary">@color/surface_primary</item>
+        <item name="colorOnSecondary">@color/surface_primary</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnBackground">@color/text_primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorAccent">@color/accent</item>
-        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:windowBackground">@color/surface_primary</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/surface_primary</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.DeviceTracker.Dialog</item>
     </style>
 </resources>

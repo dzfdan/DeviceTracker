@@ -2,6 +2,7 @@ package com.dzf.app.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -28,11 +29,11 @@ class DeviceListActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDeviceListBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets(applyTop = true, applyBottom = true)
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setHomeButtonEnabled(true)
-        binding.closeButton.setOnClickListener { finish() }
 
         binding.deviceRecyclerView.layoutManager = LinearLayoutManager(this)
         loadDevices()
@@ -48,12 +49,14 @@ class DeviceListActivity : AppCompatActivity() {
 
     private fun loadDevices() {
         lifecycleScope.launch {
+            hideListState()
             val result = withContext(Dispatchers.IO) {
                 cloudBase.getAllDeviceLocations()
             }
 
             result.fold(
                 onSuccess = { devices ->
+                    hideListState()
                     binding.deviceRecyclerView.adapter = DeviceListAdapter(
                         items = devices,
                         onTrackClick = { device ->
@@ -64,12 +67,37 @@ class DeviceListActivity : AppCompatActivity() {
                         },
                         onExportClick = { device -> exportTimeline(device) }
                     )
+
+                    if (devices.isEmpty()) {
+                        showListState(
+                            getString(R.string.device_list_empty_title),
+                            getString(R.string.device_list_empty_body)
+                        )
+                    }
                 },
                 onFailure = { error ->
-                    Toast.makeText(this@DeviceListActivity, "Load devices failed: ${error.message}", Toast.LENGTH_SHORT).show()
+                    binding.deviceRecyclerView.adapter = DeviceListAdapter(
+                        items = emptyList(),
+                        onTrackClick = { },
+                        onExportClick = { }
+                    )
+                    showListState(
+                        getString(R.string.device_list_load_failed_title),
+                        getString(R.string.device_list_load_failed_body, error.message ?: getString(R.string.unknown_error))
+                    )
                 }
             )
         }
+    }
+
+    private fun showListState(title: String, body: String) {
+        binding.listStateTitleText.text = title
+        binding.listStateBodyText.text = body
+        binding.listStatePanel.visibility = View.VISIBLE
+    }
+
+    private fun hideListState() {
+        binding.listStatePanel.visibility = View.GONE
     }
 
     private fun exportTimeline(device: DeviceLocation) {

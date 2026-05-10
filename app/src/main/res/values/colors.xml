@@ -1,11 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#1976D2</color>
-    <color name="primary_dark">#1565C0</color>
-    <color name="accent">#FF5722</color>
+    <color name="primary">@color/accent_blue</color>
+    <color name="primary_dark">@color/surface_primary</color>
+    <color name="accent">@color/accent_icy</color>
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
-    <color name="marker_current">#4CAF50</color>
-    <color name="marker_other">#2196F3</color>
-    <color name="marker_offline">#9E9E9E</color>
+    <color name="surface_primary">#08111E</color>
+    <color name="surface_secondary">#102033</color>
+    <color name="surface_panel">#CC12263A</color>
+    <color name="surface_panel_secondary">#B3152B44</color>
+    <color name="surface_state">#DD132237</color>
+    <color name="stroke_subtle">#33D9ECFF</color>
+    <color name="stroke_strong">#4DD9ECFF</color>
+    <color name="text_primary">#F2F7FF</color>
+    <color name="text_secondary">#A9BCD2</color>
+    <color name="text_muted">#73859C</color>
+    <color name="accent_icy">#8EEBFF</color>
+    <color name="accent_blue">#59A7FF</color>
+    <color name="accent_warning">#F2B766</color>
+    <color name="accent_danger">#D96C6C</color>
+    <color name="marker_current">#B7F6FF</color>
+    <color name="marker_other">#61B6FF</color>
+    <color name="marker_offline">#718399</color>
 </resources>

@@ -12,12 +12,12 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.amap.api.maps.AMap
@@ -36,6 +36,7 @@ import com.dzf.app.util.AMapLocationManager
 import com.dzf.app.util.CoordinateTransform
 import com.dzf.app.util.DeviceInfoHelper
 import com.dzf.app.util.PermissionHelper
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -51,9 +52,12 @@ class MainActivity : AppCompatActivity() {
     private var locationManager: AMapLocationManager? = null
 
     private val markers = mutableMapOf<String, Marker>()
+    private val markerVisualStates = mutableMapOf<String, MarkerVisualState>()
+    private val markerIconCache = mutableMapOf<MarkerVisualState, com.amap.api.maps.model.BitmapDescriptor>()
     private lateinit var deviceId: String
     private var isMapLoaded = false
     private var hasStartedTracking = false
+    private lateinit var formatterResources: FleetUiFormatter.Resources
 
     private val trackPoints = mutableListOf<LatLng>()
     private var trackPolyline: com.amap.api.maps.model.Polyline? = null
@@ -61,6 +65,8 @@ class MainActivity : AppCompatActivity() {
 
     private val refreshInterval: Long = 15000
     private val mapLoadTimeoutMs: Long = 8_000
+    private var lastFleetRefreshMs: Long = System.currentTimeMillis()
+    private var hasFreshFleetData: Boolean = false
 
     private val refreshRunnable = object : Runnable {
         override fun run() {
@@ -72,6 +78,10 @@ class MainActivity : AppCompatActivity() {
     private val mapLoadTimeoutRunnable = Runnable {
         if (!isMapLoaded) {
             Log.w(TAG, "Map load timeout. Please verify AMAP_KEY and network.")
+            showMainState(
+                title = getString(R.string.map_load_timeout_title),
+                body = getString(R.string.map_load_timeout_hint),
+            )
             Toast.makeText(this, getString(R.string.map_load_timeout_hint), Toast.LENGTH_LONG).show()
         }
     }
@@ -108,8 +118,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets(applyTop = true, applyBottom = true)
 
         deviceId = DeviceInfoHelper.getDeviceId(this)
+        formatterResources = FleetUiFormatter.Resources(
+            readyText = getString(R.string.sync_status_ready),
+            idleTrackText = getString(R.string.track_status_idle),
+            fleetOnlineQuantity = { count -> resources.getQuantityString(R.plurals.fleet_online_count, count) },
+            fleetRefreshedTemplate = getString(R.string.fleet_status_refreshed),
+            trackSummaryTemplate = getString(R.string.track_summary_template)
+        )
+
+        binding.trackFab.setImageResource(R.drawable.ic_fleet_track)
+        binding.trackFab.contentDescription = getString(R.string.start_tracking)
 
         binding.mapView.onCreate(savedInstanceState)
         aMap = binding.mapView.map
@@ -123,8 +144,9 @@ class MainActivity : AppCompatActivity() {
             moveToMyLocation()
         }
 
-        binding.trackFab.visibility = View.GONE
-        binding.trackCard.visibility = View.GONE
+        binding.trackFab.setOnClickListener {
+            toggleTracking()
+        }
 
         aMap.setOnMapLoadedListener {
             isMapLoaded = true
@@ -146,6 +168,7 @@ class MainActivity : AppCompatActivity() {
         if (!PermissionHelper.hasLocationPermission(this)) return
 
         hasStartedTracking = true
+        hideMainState()
         startLocationUpdates()
         startLocationService()
         loadDeviceLocations()
@@ -163,16 +186,41 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showBackgroundPermissionDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("Background Location")
-            .setMessage("To keep your location updated when the app is in the background, please enable 'Allow all the time' location permission in the next screen.")
-            .setPositiveButton("Grant") { _, _ ->
+        createThemedDialogBuilder()
+            .setTitle(getString(R.string.location_panel_title))
+            .setMessage(getString(R.string.location_panel_body))
+            .setPositiveButton(getString(R.string.grant)) { _, _ ->
                 requestBackgroundPermissionLauncher.launch(PermissionHelper.backgroundLocationPermission())
             }
-            .setNegativeButton("Skip") { _, _ ->
+            .setNegativeButton(getString(R.string.dismiss)) { _, _ ->
                 maybeStartTracking()
             }
             .show()
+    }
+
+    private fun updateFleetHeader(deviceCount: Int) {
+        val ageSeconds = ((System.currentTimeMillis() - lastFleetRefreshMs) / 1000L).coerceAtLeast(0L)
+        binding.deviceCountText.text = deviceCount.toString()
+        binding.fleetStatusText.text = FleetUiFormatter.formatFleetStatusOrReady(
+            deviceCount = deviceCount,
+            lastRefreshAgeSeconds = ageSeconds,
+            hasFreshData = hasFreshFleetData,
+            resources = formatterResources
+        )
+    }
+
+    private fun showMainState(title: String, body: String) {
+        binding.mainStateTitleText.text = title
+        binding.mainStateBodyText.text = body
+        binding.mainStatePanel.visibility = View.VISIBLE
+    }
+
+    private fun hideMainState() {
+        binding.mainStatePanel.visibility = View.GONE
+    }
+
+    internal fun createThemedDialogBuilder(): MaterialAlertDialogBuilder {
+        return MaterialAlertDialogBuilder(this, R.style.ThemeOverlay_DeviceTracker_Dialog)
     }
 
     private fun startLocationUpdates() {
@@ -222,6 +270,7 @@ class MainActivity : AppCompatActivity() {
                 .icon(createMyLocationBitmap())
                 .draggable(false)
             myLocationMarker = aMap.addMarker(markerOptions)
+            myLocationMarker?.`object` = deviceId
             aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
         } else {
             myLocationMarker?.setPosition(latLng)
@@ -296,7 +345,9 @@ class MainActivity : AppCompatActivity() {
         trackPoints.clear()
         trackPolyline?.remove()
         trackPolyline = null
-        binding.trackFab.setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
+        updateTrackInfo()
+        binding.trackFab.setImageResource(R.drawable.ic_fleet_close)
+        binding.trackFab.contentDescription = getString(R.string.stop_tracking)
         binding.trackCard.visibility = View.VISIBLE
         Toast.makeText(this, getString(R.string.tracking_started), Toast.LENGTH_SHORT).show()
         Log.d(TAG, "Tracking started")
@@ -304,7 +355,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun stopTracking() {
         isTracking = false
-        binding.trackFab.setImageResource(android.R.drawable.ic_menu_directions)
+        updateTrackInfo()
+        binding.trackFab.setImageResource(R.drawable.ic_fleet_track)
+        binding.trackFab.contentDescription = getString(R.string.start_tracking)
         Toast.makeText(this, getString(R.string.tracking_stopped), Toast.LENGTH_SHORT).show()
         Log.d(TAG, "Tracking stopped. Total points: ${trackPoints.size}")
     }
@@ -325,7 +378,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateTrackInfo() {
         val distance = calculateTotalDistance()
-        binding.trackInfoText.text = getString(R.string.track_info, trackPoints.size, distance)
+        binding.trackInfoText.text = FleetUiFormatter.formatTrackSummaryOrIdle(
+            pointCount = trackPoints.size,
+            distanceKm = distance,
+            isTracking = isTracking,
+            resources = formatterResources
+        )
     }
 
     private fun calculateTotalDistance(): Double {
@@ -376,14 +434,21 @@ class MainActivity : AppCompatActivity() {
 
             result.fold(
                 onSuccess = { devices ->
+                    hasFreshFleetData = true
+                    lastFleetRefreshMs = System.currentTimeMillis()
                     updateMarkers(devices)
                     runOnUiThread {
-                        binding.deviceCountText.text = getString(R.string.device_count, devices.size)
+                        updateFleetHeader(devices.size)
+                        hideMainState()
                     }
                 },
                 onFailure = { error ->
                     runOnUiThread {
-                        Toast.makeText(this@MainActivity, "Failed to load devices: ${error.message}", Toast.LENGTH_SHORT).show()
+                        showMainState(
+                            title = getString(R.string.map_refresh_failed_title),
+                            body = getString(R.string.map_error_body),
+                        )
+                        Toast.makeText(this@MainActivity, getString(R.string.map_error_body), Toast.LENGTH_SHORT).show()
                     }
                 }
             )
@@ -398,6 +463,7 @@ class MainActivity : AppCompatActivity() {
         toRemove.forEach { id ->
             markers[id]?.remove()
             markers.remove(id)
+            markerVisualStates.remove(id)
         }
 
         otherDevices.forEach { device ->
@@ -410,14 +476,17 @@ class MainActivity : AppCompatActivity() {
                 existingMarker.setSnippet(buildMarkerSnippet(device))
                 updateMarkerIcon(existingMarker, device)
             } else {
+                val state = buildMarkerVisualState(device)
                 val markerOptions = MarkerOptions()
                     .position(latLng)
                     .title(device.deviceName)
                     .snippet(buildMarkerSnippet(device))
-                    .icon(createMarkerBitmap(device))
+                    .icon(getOrCreateMarkerBitmap(state))
                 val marker = aMap.addMarker(markerOptions)
                 if (marker != null) {
+                    marker.`object` = device.deviceId
                     markers[device.deviceId] = marker
+                    markerVisualStates[device.deviceId] = state
                 }
             }
         }
@@ -431,21 +500,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateMarkerIcon(marker: Marker, device: DeviceLocation) {
-        marker.setIcon(createMarkerBitmap(device))
+        val state = buildMarkerVisualState(device)
+        if (markerVisualStates[device.deviceId] == state) return
+
+        markerVisualStates[device.deviceId] = state
+        marker.setIcon(getOrCreateMarkerBitmap(state))
     }
 
-    private fun createMarkerBitmap(device: DeviceLocation): com.amap.api.maps.model.BitmapDescriptor {
+    private fun buildMarkerVisualState(device: DeviceLocation): MarkerVisualState {
+        val highlight = device.deviceId == deviceId
         val color = when {
-            device.deviceId == deviceId -> getColorCompat(R.color.marker_current)
+            highlight -> getColorCompat(R.color.marker_current)
             device.isOnline -> getColorCompat(R.color.marker_other)
             else -> getColorCompat(R.color.marker_offline)
         }
-        val name = device.deviceName.ifBlank { "Unknown" }
-        return createLabeledMarkerIcon(
-            name = name,
+        return MarkerVisualState(
+            label = device.deviceName.ifBlank { getString(R.string.unknown_device) },
             color = color,
-            highlight = device.deviceId == deviceId
+            highlight = highlight
         )
+    }
+
+    private fun getOrCreateMarkerBitmap(state: MarkerVisualState): com.amap.api.maps.model.BitmapDescriptor {
+        return markerIconCache.getOrPut(state) {
+            createLabeledMarkerIcon(
+                name = state.label,
+                color = state.color,
+                highlight = state.highlight
+            )
+        }
     }
 
     private fun createLabeledMarkerIcon(
@@ -453,76 +536,82 @@ class MainActivity : AppCompatActivity() {
         color: Int,
         highlight: Boolean
     ): com.amap.api.maps.model.BitmapDescriptor {
-        val width = 200
-        val height = 230
+        val metrics = resources.displayMetrics
+        val width = dp(metrics, 110f).toInt()
+        val height = dp(metrics, 120f).toInt()
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
         val cx = width / 2f
-        val circleCy = 82f
-        val circleRadius = 42f
+        val circleCy = dp(metrics, 41f)
+        val circleRadius = dp(metrics, 17f)
 
         if (highlight) {
-            val glowPaint = Paint().apply {
+            val haloPaint = Paint().apply {
                 this.color = color
-                alpha = 70
+                alpha = 85
                 isAntiAlias = true
             }
-            canvas.drawCircle(cx, circleCy, circleRadius + 24f, glowPaint)
+            canvas.drawCircle(cx, circleCy, circleRadius + dp(metrics, 11f), haloPaint)
         }
 
         val pinPaint = Paint().apply {
             this.color = color
             isAntiAlias = true
         }
+        val centerPaint = Paint().apply {
+            this.color = Color.parseColor("#08111E")
+            isAntiAlias = true
+        }
+        val borderPaint = Paint().apply {
+            this.color = Color.parseColor("#DDEBFF")
+            style = Paint.Style.STROKE
+            strokeWidth = dp(metrics, 1.75f)
+            isAntiAlias = true
+        }
         canvas.drawCircle(cx, circleCy, circleRadius, pinPaint)
+        canvas.drawCircle(cx, circleCy, dp(metrics, 6f), centerPaint)
+        canvas.drawCircle(cx, circleCy, circleRadius, borderPaint)
 
-        val pinTail = Path().apply {
-            moveTo(cx, circleCy + circleRadius - 2f)
-            lineTo(cx - 18f, circleCy + circleRadius + 40f)
-            lineTo(cx + 18f, circleCy + circleRadius + 40f)
+        val tail = Path().apply {
+            moveTo(cx, circleCy + circleRadius - dp(metrics, 2f))
+            lineTo(cx - dp(metrics, 8f), circleCy + circleRadius + dp(metrics, 17f))
+            lineTo(cx + dp(metrics, 8f), circleCy + circleRadius + dp(metrics, 17f))
             close()
         }
-        canvas.drawPath(pinTail, pinPaint)
+        canvas.drawPath(tail, pinPaint)
+        canvas.drawPath(tail, borderPaint)
 
-        val pinBorder = Paint().apply {
-            this.color = Color.WHITE
-            style = Paint.Style.STROKE
-            strokeWidth = 5f
-            isAntiAlias = true
-        }
-        canvas.drawCircle(cx, circleCy, circleRadius, pinBorder)
-        canvas.drawPath(pinTail, pinBorder)
-
-        val centerDot = Paint().apply {
-            this.color = Color.WHITE
-            isAntiAlias = true
-        }
-        canvas.drawCircle(cx, circleCy, 12f, centerDot)
-
-        val labelRect = RectF(26f, 166f, width - 26f, 214f)
+        val horizontalPadding = dp(metrics, 14f)
+        val labelRect = RectF(
+            horizontalPadding,
+            dp(metrics, 84f),
+            width - horizontalPadding,
+            dp(metrics, 107f)
+        )
         val labelBg = Paint().apply {
-            this.color = Color.parseColor("#F7FAFC")
+            this.color = Color.parseColor("#D9152B44")
             isAntiAlias = true
         }
-        canvas.drawRoundRect(labelRect, 24f, 24f, labelBg)
-
         val labelBorder = Paint().apply {
-            this.color = Color.parseColor("#CFD8DC")
+            this.color = Color.parseColor("#55D9ECFF")
             style = Paint.Style.STROKE
-            strokeWidth = 2.5f
+            strokeWidth = dp(metrics, 1f)
             isAntiAlias = true
         }
-        canvas.drawRoundRect(labelRect, 24f, 24f, labelBorder)
-
-        val textPaint = Paint().apply {
-            this.color = Color.parseColor("#102027")
-            isAntiAlias = true
+        val labelText = Paint().apply {
+            this.color = Color.parseColor("#F2F7FF")
             textAlign = Paint.Align.CENTER
-            textSize = 25f
+            textSize = sp(metrics, 12f)
+            isAntiAlias = true
         }
+        val labelRadius = dp(metrics, 11f)
+        canvas.drawRoundRect(labelRect, labelRadius, labelRadius, labelBg)
+        canvas.drawRoundRect(labelRect, labelRadius, labelRadius, labelBorder)
+
         val displayName = if (name.length > 12) name.take(12) + "..." else name
-        canvas.drawText(displayName, cx, 198f, textPaint)
+        val textY = labelRect.centerY() - ((labelText.descent() + labelText.ascent()) / 2f)
+        canvas.drawText(displayName, cx, textY, labelText)
 
         return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
@@ -542,13 +631,13 @@ class MainActivity : AppCompatActivity() {
             timeText.text = getString(R.string.last_seen, parts[1])
         }
 
-        if (marker.title == DeviceInfoHelper.getDeviceName(this)) {
+        if (marker.`object` == deviceId) {
             nameText.text = "${marker.title} (${getString(R.string.this_device)})"
         }
 
-        AlertDialog.Builder(this)
+        createThemedDialogBuilder()
             .setView(view)
-            .setPositiveButton("OK", null)
+            .setPositiveButton(android.R.string.ok, null)
             .show()
     }
 
@@ -582,6 +671,10 @@ class MainActivity : AppCompatActivity() {
         return ContextCompat.getColor(this, colorResId)
     }
 
+    private fun dp(metrics: DisplayMetrics, value: Float): Float = value * metrics.density
+
+    private fun sp(metrics: DisplayMetrics, value: Float): Float = value * metrics.scaledDensity
+
     override fun onResume() {
         super.onResume()
         binding.mapView.onResume()
@@ -608,4 +701,10 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
     }
+
+    private data class MarkerVisualState(
+        val label: String,
+        val color: Int,
+        val highlight: Boolean
+    )
 }

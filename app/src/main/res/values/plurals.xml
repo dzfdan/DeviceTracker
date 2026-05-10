@@ -1,0 +1,6 @@
+<resources>
+    <plurals name="fleet_online_count">
+        <item quantity="one">%1$d device online</item>
+        <item quantity="other">%1$d devices online</item>
+    </plurals>
+</resources>
