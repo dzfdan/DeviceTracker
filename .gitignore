@@ -56,3 +56,7 @@ google-services.json
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local worktrees and brainstorming artifacts
+.worktrees/
+.superpowers/
