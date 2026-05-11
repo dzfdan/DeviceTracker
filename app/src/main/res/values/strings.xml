@@ -22,7 +22,7 @@
     <string name="track_recording">Track Recording</string>
     <string name="start_tracking">Start Tracking</string>
     <string name="stop_tracking">Stop Tracking</string>
-    <string name="track_info">Points: %d | Distance: %.2f km</string>
+    <string name="track_info">Points: %1$d | Distance: %2$.2f km</string>
     <string name="track_summary_template">%1$d points • %2$.2f km</string>
     <string name="tracking_started">Tracking started</string>
     <string name="tracking_stopped">Tracking stopped</string>
@@ -36,7 +36,7 @@
     <string name="export_today_timeline">Export Timeline</string>
     <string name="track_map_title">Track</string>
     <string name="track_summary_label">Route replay</string>
-    <string name="track_summary_today">Today&apos;s route</string>
+    <string name="track_summary_today">Today\'s route</string>
     <string name="track_summary_no_route">No route captured today</string>
     <string name="track_summary_points">%1$d points captured</string>
     <string name="track_summary_distance">%1$.2f km traced today</string>
