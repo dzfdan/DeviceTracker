@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">@color/accent_blue</color>
-    <color name="primary_dark">@color/surface_primary</color>
-    <color name="accent">@color/accent_icy</color>
+    <item name="primary" type="color">@color/accent_blue</item>
+    <item name="primary_dark" type="color">@color/surface_primary</item>
+    <item name="accent" type="color">@color/accent_icy</item>
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="surface_primary">#08111E</color>
