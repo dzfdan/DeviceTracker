@@ -76,7 +76,7 @@ class LocationTrackingService : Service() {
                 if (code == 12 || code == 11 || code == 1 || code == 8) {
                     locationManager.restartLocation()
                 }
-                Toast.makeText(this, "Location failed: $info", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, getString(R.string.toast_location_failed_detail, info), Toast.LENGTH_LONG).show()
             }
         )
 

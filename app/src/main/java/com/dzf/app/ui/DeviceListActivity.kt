@@ -125,7 +125,7 @@ class DeviceListActivity : AppCompatActivity() {
                     startActivity(Intent.createChooser(shareIntent, getString(R.string.share_timeline_title)))
                 },
                 onFailure = { error ->
-                    val message = error.message ?: "unknown"
+                    val message = error.message ?: getString(R.string.unknown_error)
                     Toast.makeText(this@DeviceListActivity, getString(R.string.export_failed, message), Toast.LENGTH_SHORT).show()
                 }
             )
@@ -134,14 +134,14 @@ class DeviceListActivity : AppCompatActivity() {
 
     private fun buildTimelineCsv(deviceName: String, deviceId: String, track: List<DeviceLocation>): String {
         val sb = StringBuilder()
-        sb.append("deviceName,deviceId,time,latitude,longitude,isOnline\n")
+        sb.append(getString(R.string.export_timeline_csv_headers)).append('\n')
         track.forEach { point ->
             sb.append(escapeCsv(deviceName)).append(',')
                 .append(escapeCsv(deviceId)).append(',')
                 .append(escapeCsv(exportTimeFormat.format(Date(point.timestamp)))).append(',')
                 .append(point.latitude).append(',')
                 .append(point.longitude).append(',')
-                .append(point.isOnline)
+                .append(escapeCsv(getString(if (point.isOnline) R.string.online else R.string.offline)))
                 .append('\n')
         }
         return sb.toString()
