@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
                     maybeStartTracking()
                 }
             } else {
-                Toast.makeText(this, "Location permission is required for this app to work", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, getString(R.string.toast_location_permission_required), Toast.LENGTH_LONG).show()
             }
         }
 
@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity() {
             if (!granted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 Toast.makeText(
                     this,
-                    "Background location denied. Upload may pause in background.",
+                    getString(R.string.toast_background_location_denied),
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -637,7 +637,7 @@ class MainActivity : AppCompatActivity() {
 
         createThemedDialogBuilder()
             .setView(view)
-            .setPositiveButton(android.R.string.ok, null)
+            .setPositiveButton(R.string.close, null)
             .show()
     }
 
@@ -654,13 +654,13 @@ class MainActivity : AppCompatActivity() {
                         aMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
                     } else {
                         runOnUiThread {
-                            Toast.makeText(this@MainActivity, "Waiting for location...", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@MainActivity, getString(R.string.toast_waiting_for_location), Toast.LENGTH_SHORT).show()
                         }
                     }
                 },
                 onFailure = {
                     runOnUiThread {
-                        Toast.makeText(this@MainActivity, "Failed to get location", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, getString(R.string.toast_failed_to_get_location), Toast.LENGTH_SHORT).show()
                     }
                 }
             )

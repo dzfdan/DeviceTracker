@@ -76,7 +76,7 @@ class DeviceTrackActivity : AppCompatActivity() {
     private fun loadTrack() {
         val deviceId = intent.getStringExtra(EXTRA_DEVICE_ID).orEmpty()
         if (deviceId.isBlank()) {
-            Toast.makeText(this, "Invalid device id", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.invalid_device_id), Toast.LENGTH_SHORT).show()
             showTrackState(
                 title = getString(R.string.track_error_title),
                 body = getString(R.string.track_error_body, getString(R.string.unknown_error)),
@@ -128,8 +128,8 @@ class DeviceTrackActivity : AppCompatActivity() {
                     aMap.addMarker(
                         MarkerOptions()
                             .position(start)
-                            .title("Start")
-                            .snippet("Track starting point")
+                            .title(getString(R.string.track_marker_start_title))
+                            .snippet(getString(R.string.track_marker_start_snippet))
                             .anchor(startMarkerSpec().anchorU, startMarkerSpec().anchorV)
                             .icon(createMarkerIcon(startMarkerSpec()))
                     )
@@ -137,8 +137,8 @@ class DeviceTrackActivity : AppCompatActivity() {
                     aMap.addMarker(
                         MarkerOptions()
                             .position(current)
-                            .title("Current")
-                            .snippet("Latest location")
+                            .title(getString(R.string.track_marker_current_title))
+                            .snippet(getString(R.string.track_marker_current_snippet))
                             .anchor(currentMarkerSpec().anchorU, currentMarkerSpec().anchorV)
                             .icon(createMarkerIcon(currentMarkerSpec()))
                     )
