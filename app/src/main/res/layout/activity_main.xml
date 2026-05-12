@@ -55,20 +55,23 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/homeHudStrip"
+            android:layout_width="@dimen/hud_strip_width"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_lg"
-            android:gravity="top"
-            android:orientation="horizontal">
+            android:layout_marginTop="@dimen/space_md"
+            android:orientation="vertical">
 
             <LinearLayout
                 android:id="@+id/deviceCountCard"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:background="@drawable/bg_panel_glass_primary"
+                android:minHeight="@dimen/hud_primary_card_min_height"
                 android:orientation="vertical"
-                android:padding="@dimen/space_lg">
+                android:paddingStart="@dimen/space_md"
+                android:paddingTop="@dimen/space_md"
+                android:paddingEnd="@dimen/space_md"
+                android:paddingBottom="@dimen/space_sm">
 
                 <LinearLayout
                     android:id="@+id/fleetOverviewCard"
@@ -85,31 +88,42 @@
 
                     <TextView
                         android:id="@+id/deviceCountText"
-                        style="@style/TextAppearance.DeviceTracker.Metric"
-                        android:layout_width="wrap_content"
+                        style="@style/TextAppearance.DeviceTracker.MetricCompact"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_sm"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:autoSizeMaxTextSize="@dimen/text_metric_compact_size"
+                        android:autoSizeMinTextSize="16sp"
+                        android:autoSizeStepGranularity="1sp"
+                        android:autoSizeTextType="uniform"
+                        android:maxLines="1"
                         android:text="0" />
 
                     <TextView
                         android:id="@+id/fleetStatusText"
-                        android:layout_width="wrap_content"
+                        style="@style/TextAppearance.DeviceTracker.StatusCompact"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_sm"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:ellipsize="end"
+                        android:maxLines="1"
                         android:text="@string/sync_status_ready"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
+                        android:textAlignment="viewStart" />
                 </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/trackCard"
-                android:layout_width="132dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_sm"
+                android:layout_marginTop="@dimen/space_sm"
                 android:background="@drawable/bg_panel_glass_secondary"
+                android:minHeight="@dimen/hud_secondary_card_min_height"
                 android:orientation="vertical"
-                android:padding="@dimen/space_md">
+                android:paddingStart="@dimen/space_md"
+                android:paddingTop="@dimen/space_sm"
+                android:paddingEnd="@dimen/space_md"
+                android:paddingBottom="@dimen/space_sm">
 
                 <LinearLayout
                     android:id="@+id/trackStatusCard"
@@ -125,13 +139,14 @@
 
                     <TextView
                         android:id="@+id/trackInfoText"
-                        android:layout_width="wrap_content"
+                        style="@style/TextAppearance.DeviceTracker.EmphasisCompact"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_sm"
+                        android:layout_marginTop="@dimen/space_xs"
+                        android:ellipsize="end"
+                        android:maxLines="1"
                         android:text="@string/track_status_idle"
-                        android:textColor="@color/text_primary"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
+                        android:textAlignment="viewStart" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>

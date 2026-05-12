@@ -24,6 +24,7 @@
     <string name="stop_tracking">停止追踪</string>
     <string name="track_info">轨迹点：%1$d | 距离：%2$.2f 公里</string>
     <string name="track_summary_template">%1$d 个轨迹点 • %2$.2f 公里</string>
+    <string name="track_summary_compact">%1$d 点 / %2$.1f 公里</string>
     <string name="tracking_started">已开始追踪</string>
     <string name="tracking_stopped">已停止追踪</string>
     <string name="device_list_title">设备列表</string>

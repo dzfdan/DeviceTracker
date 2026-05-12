@@ -9,6 +9,22 @@
     <style name="TextAppearance.DeviceTracker.Metric" parent="TextAppearance.Material3.DisplaySmall">
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">@dimen/text_metric_size</item>
+    </style>
+
+    <style name="TextAppearance.DeviceTracker.MetricCompact" parent="TextAppearance.DeviceTracker.Metric">
+        <item name="android:textSize">@dimen/text_metric_compact_size</item>
+    </style>
+
+    <style name="TextAppearance.DeviceTracker.StatusCompact" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">@dimen/text_status_compact_size</item>
+    </style>
+
+    <style name="TextAppearance.DeviceTracker.EmphasisCompact" parent="TextAppearance.Material3.TitleSmall">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">@dimen/text_track_compact_size</item>
     </style>
 
     <style name="Widget.DeviceTracker.Toolbar" parent="Widget.Material3.Toolbar">

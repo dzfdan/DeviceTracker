@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity() {
             idleTrackText = getString(R.string.track_status_idle),
             fleetOnlineQuantity = { count -> resources.getQuantityString(R.plurals.fleet_online_count, count) },
             fleetRefreshedTemplate = getString(R.string.fleet_status_refreshed),
-            trackSummaryTemplate = getString(R.string.track_summary_template)
+            trackSummaryTemplate = getString(R.string.track_summary_compact)
         )
 
         binding.trackFab.setImageResource(R.drawable.ic_fleet_track)

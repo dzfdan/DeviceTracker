@@ -5,6 +5,13 @@
     <dimen name="space_md">16dp</dimen>
     <dimen name="space_lg">20dp</dimen>
     <dimen name="space_xl">28dp</dimen>
+    <dimen name="hud_strip_width">136dp</dimen>
+    <dimen name="hud_primary_card_min_height">76dp</dimen>
+    <dimen name="hud_secondary_card_min_height">68dp</dimen>
+    <dimen name="text_metric_size">30sp</dimen>
+    <dimen name="text_metric_compact_size">24sp</dimen>
+    <dimen name="text_status_compact_size">12sp</dimen>
+    <dimen name="text_track_compact_size">13sp</dimen>
     <dimen name="radius_chip">14dp</dimen>
     <dimen name="radius_panel">24dp</dimen>
     <dimen name="radius_button">22dp</dimen>
