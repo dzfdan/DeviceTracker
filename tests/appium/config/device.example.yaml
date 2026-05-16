@@ -1,0 +1,8 @@
+platformName: Android
+automationName: UiAutomator2
+deviceName: AndroidDevice
+udid: REPLACE_WITH_ADB_DEVICE_ID
+appPackage: com.dzf.app
+appActivity: com.dzf.app.ui.MainActivity
+noReset: true
+newCommandTimeout: 180

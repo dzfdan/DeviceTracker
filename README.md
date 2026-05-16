@@ -112,6 +112,109 @@ private const val ENV_ID = "your-env-id"
 4. 高德地图上显示所有安装了此应用的设备
 5. 点击 Marker 查看设备详情
 
+## Appium 自动化测试
+
+项目已增加基于 `Python + pytest + Appium 2 + UiAutomator2` 的本地真机自动化测试骨架，测试目录位于 `tests/appium/`。
+
+### 前置条件
+
+1. Python 3.11+
+2. Node.js 与 npm
+3. Appium 2
+4. Android 真机，并开启 USB 调试
+5. `adb` 可用
+
+### 1. 安装 Python 依赖
+
+```bash
+python3 -m pip install --user --break-system-packages -r requirements-appium.txt
+```
+
+### 2. 安装 Appium 2 和 UiAutomator2 Driver
+
+```bash
+npm install -g appium
+appium driver install uiautomator2@4.2.9
+```
+
+说明：`uiautomator2@4.2.9` 与当前方案中的 `Appium 2` 兼容，不能直接使用最新版本。
+
+### 3. 准备测试配置
+
+复制模板并生成本地配置文件：
+
+```bash
+cp tests/appium/config/device.example.yaml tests/appium/config/device.yaml
+cp tests/appium/config/env.example.yaml tests/appium/config/env.yaml
+```
+
+修改 `tests/appium/config/device.yaml`：
+
+- `udid`: 替换为 `adb devices` 查到的真实设备 ID
+- `appPackage`: 默认是 `com.dzf.app`
+- `appActivity`: 默认是 `com.dzf.app.ui.MainActivity`
+
+`tests/appium/config/env.yaml` 默认内容：
+
+```yaml
+appiumServerUrl: http://127.0.0.1:4723
+artifactsDir: tests/appium/artifacts
+apkPath: app/build/outputs/apk/debug/app-debug.apk
+```
+
+### 4. 检查设备连接
+
+```bash
+adb devices
+```
+
+如果你在 WSL 下运行，`adb` 不在 PATH 中，可以显式指定 Windows SDK 中的 `adb.exe`：
+
+```bash
+export ADB_PATH="/mnt/c/Users/neusoft/AppData/Local/Android/Sdk/platform-tools/adb.exe"
+```
+
+### 5. 启动 Appium Server
+
+```bash
+appium
+```
+
+默认监听地址为：`http://127.0.0.1:4723`
+
+### 6. 运行测试
+
+先检查测试是否能被正确收集：
+
+```bash
+python3 -m pytest --collect-only tests/appium
+```
+
+运行 smoke 用例：
+
+```bash
+python3 -m pytest tests/appium/smoke -m "smoke and local_device" -v
+```
+
+运行 business 用例：
+
+```bash
+python3 -m pytest tests/appium/business -m "business and local_device" -v
+```
+
+生成 smoke HTML 报告：
+
+```bash
+python3 -m pytest tests/appium/smoke -m "smoke and local_device" -v --html=tests/appium/artifacts/smoke-report.html
+```
+
+### 7. 常见问题
+
+- `adb devices` 看不到设备：检查 USB 调试、数据线、设备授权弹窗
+- `adb` 命令不存在：在 WSL 中设置 `ADB_PATH`
+- Appium 启动了但测试连不上：确认 `tests/appium/config/env.yaml` 中的 `appiumServerUrl` 正确
+- 首次运行权限弹窗文本不一致：扩展 `tests/appium/pages/permission_dialog.py` 中的 `ALLOW_TEXTS`
+
 ## Marker 颜色说明
 
 - **绿色**: 当前设备（你正在使用的设备）

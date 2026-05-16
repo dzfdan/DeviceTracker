@@ -60,3 +60,7 @@ Thumbs.db
 # Local worktrees and brainstorming artifacts
 .worktrees/
 .superpowers/
+
+# Local Appium device configuration
+tests/appium/config/device.yaml
+tests/appium/config/env.yaml

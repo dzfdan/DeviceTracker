@@ -1,0 +1,20 @@
+import pytest
+
+from tests.appium.utils.screenshots import save_failure_artifacts
+
+
+pytest_plugins = [
+    "tests.appium.fixtures.driver",
+    "tests.appium.fixtures.app",
+]
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    report = outcome.get_result()
+    if report.when == "call" and report.failed:
+        driver = item.funcargs.get("driver")
+        config = item.funcargs.get("appium_config")
+        if driver and config:
+            save_failure_artifacts(driver, config["artifactsDir"], item.name)
