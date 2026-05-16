@@ -4,7 +4,8 @@ from tests.appium.utils.locators import MAIN
 
 class MainPage(BasePage):
     def wait_loaded(self):
-        self.find_visible_by_id(MAIN["hud_strip"])
+        self.find_visible_by_id(MAIN["device_count_card"])
+        self.find_visible_by_id(MAIN["track_card"])
         self.find_visible_by_id(MAIN["track_fab"])
         self.find_visible_by_id(MAIN["my_location_fab"])
 
