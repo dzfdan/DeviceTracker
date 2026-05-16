@@ -116,6 +116,12 @@ private const val ENV_ID = "your-env-id"
 
 项目已增加基于 `Python + pytest + Appium 2 + UiAutomator2` 的本地真机自动化测试骨架，测试目录位于 `tests/appium/`。
 
+### 运行方式选择
+
+- 推荐：在 Windows 中运行 Appium 与 pytest
+- 补充：可在 WSL 中维护测试代码和配置
+- 当前结论：在这台机器上，Windows 真机连接最稳定，WSL 运行 Appium 仍存在设备桥接限制
+
 ### 前置条件
 
 1. Python 3.11+
@@ -168,21 +174,74 @@ apkPath: app/build/outputs/apk/debug/app-debug.apk
 adb devices
 ```
 
-如果你在 WSL 下运行，`adb` 不在 PATH 中，可以显式指定 Windows SDK 中的 `adb.exe`：
+### 5. 推荐方案：在 Windows 中运行 Appium
+
+先安装 Appium 和 Python 依赖：
+
+```powershell
+python -m pip install -r requirements-appium.txt
+npm install -g appium
+appium driver install uiautomator2@4.2.9
+```
+
+确认设备已连接：
+
+```powershell
+adb devices
+```
+
+启动 Appium Server：
+
+```powershell
+appium
+```
+
+运行测试：
+
+```powershell
+python -m pytest --collect-only tests/appium
+python -m pytest tests/appium/smoke -m "smoke and local_device" -v
+python -m pytest tests/appium/business -m "business and local_device" -v
+python -m pytest tests/appium/smoke -m "smoke and local_device" -v --html=tests/appium/artifacts/smoke-report.html
+```
+
+这是当前最推荐的运行方式，因为 Windows 可以直接通过本机 `adb` 与 USB 真机通信。
+
+### 6. 补充方案：在 WSL 中运行 Appium
+
+WSL 适合维护测试代码、执行 `pytest --collect-only`、以及做纯 Python 层验证。
+
+安装依赖：
+
+```bash
+python3 -m pip install --user --break-system-packages -r requirements-appium.txt
+npm install -g appium
+appium driver install uiautomator2@4.2.9
+```
+
+如果你只是想在 WSL 中复用 Windows 的 `adb.exe` 查看设备，可以设置：
 
 ```bash
 export ADB_PATH="/mnt/c/Users/neusoft/AppData/Local/Android/Sdk/platform-tools/adb.exe"
 ```
 
-### 5. 启动 Appium Server
+可执行的基础检查：
 
 ```bash
-appium
+python3 -m pytest --collect-only tests/appium
+"/mnt/c/Users/neusoft/AppData/Local/Android/Sdk/platform-tools/adb.exe" devices -l
 ```
 
-默认监听地址为：`http://127.0.0.1:4723`
+### 7. 已知限制
 
-### 6. 运行测试
+- 当前环境下，Windows `adb.exe` 可以看到 USB 真机，但 WSL 内原生 Linux `adb` 看不到该设备
+- Appium 在 WSL 中运行时，如果依赖 Windows `adb.exe`，会在安装辅助 APK 时遇到 Linux 路径与 Windows 可访问路径不兼容的问题
+- 因此，WSL 目前不适合作为这台机器上的 Appium 真机执行环境
+- 推荐策略是：
+  - 在 WSL 中编写和维护 `tests/appium/`
+  - 在 Windows 中启动 Appium 并执行 pytest
+
+### 8. 运行测试
 
 先检查测试是否能被正确收集：
 
@@ -208,11 +267,14 @@ python3 -m pytest tests/appium/business -m "business and local_device" -v
 python3 -m pytest tests/appium/smoke -m "smoke and local_device" -v --html=tests/appium/artifacts/smoke-report.html
 ```
 
-### 7. 常见问题
+在 Windows 中运行时，可将上面的 `python3` 替换为 `python`。
+
+### 9. 常见问题
 
 - `adb devices` 看不到设备：检查 USB 调试、数据线、设备授权弹窗
 - `adb` 命令不存在：在 WSL 中设置 `ADB_PATH`
 - Appium 启动了但测试连不上：确认 `tests/appium/config/env.yaml` 中的 `appiumServerUrl` 正确
+- WSL 中真机会话起不来：优先改为 Windows 中执行 Appium 与 pytest
 - 首次运行权限弹窗文本不一致：扩展 `tests/appium/pages/permission_dialog.py` 中的 `ALLOW_TEXTS`
 
 ## Marker 颜色说明

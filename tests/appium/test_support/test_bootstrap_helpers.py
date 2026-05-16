@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from tests.appium.fixtures.driver import import_appium_modules
 from tests.appium.fixtures.driver import load_yaml
 from tests.appium.utils.adb_helpers import list_devices
 from tests.appium.utils.screenshots import save_failure_artifacts
@@ -52,3 +53,15 @@ def test_load_yaml_reads_yaml_mapping(tmp_path):
     config.write_text("appiumServerUrl: http://127.0.0.1:4723\n", encoding="utf-8")
 
     assert load_yaml(str(config)) == {"appiumServerUrl": "http://127.0.0.1:4723"}
+
+
+def test_import_appium_modules_uses_installed_package_when_tests_path_shadows_it(monkeypatch):
+    import sys
+
+    sys.path.insert(0, "tests")
+    monkeypatch.syspath_prepend("tests")
+
+    webdriver, options = import_appium_modules()
+
+    assert webdriver.__name__ == "appium.webdriver"
+    assert options.__name__ == "UiAutomator2Options"
