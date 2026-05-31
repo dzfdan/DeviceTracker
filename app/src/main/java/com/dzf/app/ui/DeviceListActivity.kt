@@ -83,7 +83,10 @@ class DeviceListActivity : AppCompatActivity() {
                     )
                     showListState(
                         getString(R.string.device_list_load_failed_title),
-                        getString(R.string.device_list_load_failed_body, error.message ?: getString(R.string.unknown_error))
+                        getString(
+                            R.string.device_list_load_failed_body,
+                            error.message ?: getString(R.string.unknown_error)
+                        )
                     )
                 }
             )
@@ -94,10 +97,12 @@ class DeviceListActivity : AppCompatActivity() {
         binding.listStateTitleText.text = title
         binding.listStateBodyText.text = body
         binding.listStatePanel.visibility = View.VISIBLE
+        binding.deviceRecyclerView.alpha = 0.72f
     }
 
     private fun hideListState() {
         binding.listStatePanel.visibility = View.GONE
+        binding.deviceRecyclerView.alpha = 1f
     }
 
     private fun exportTimeline(device: DeviceLocation) {

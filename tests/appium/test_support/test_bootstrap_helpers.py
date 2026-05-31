@@ -65,3 +65,21 @@ def test_import_appium_modules_uses_installed_package_when_tests_path_shadows_it
 
     assert webdriver.__name__ == "appium.webdriver"
     assert options.__name__ == "UiAutomator2Options"
+
+
+def test_device_list_adapter_uses_survey_status_chip_tokens():
+    adapter_source = Path(
+        "app/src/main/java/com/dzf/app/ui/DeviceListAdapter.kt"
+    ).read_text(encoding="utf-8")
+
+    assert "R.drawable.bg_status_chip" in adapter_source
+    assert "bg_chip_status_online" not in adapter_source
+    assert "bg_chip_status_offline" not in adapter_source
+
+
+def test_tool_button_drawable_defines_disabled_state():
+    drawable_source = Path(
+        "app/src/main/res/drawable/bg_button_tool.xml"
+    ).read_text(encoding="utf-8")
+
+    assert 'android:state_enabled="false"' in drawable_source

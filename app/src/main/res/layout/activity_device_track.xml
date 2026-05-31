@@ -13,7 +13,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#2406111E" />
+        android:background="@color/map_scrim" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -40,33 +40,54 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_sm"
-            android:background="@drawable/bg_panel_glass_primary"
-            android:orientation="vertical"
-            android:padding="@dimen/space_lg">
+            android:background="@drawable/bg_panel_survey_primary"
+            android:gravity="center_vertical"
+            android:minHeight="@dimen/hud_primary_card_min_height"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/space_lg"
+            android:paddingTop="@dimen/space_md"
+            android:paddingEnd="@dimen/space_lg"
+            android:paddingBottom="@dimen/space_md">
 
-            <TextView
-                android:id="@+id/trackSummaryTitleText"
-                style="@style/TextAppearance.DeviceTracker.Overline"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="@string/track_summary_label" />
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/trackSummaryBodyText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_sm"
-                android:textColor="@color/text_primary"
-                android:textSize="22sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/trackSummaryTitleText"
+                    style="@style/TextAppearance.DeviceTracker.Overline"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/track_summary_label" />
+
+                <TextView
+                    android:id="@+id/trackSummaryBodyText"
+                    style="@style/TextAppearance.DeviceTracker.MetricCompact"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_xs"
+                    android:ellipsize="end"
+                    android:maxLines="1" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/trackSummaryMetaText"
+                style="@style/TextAppearance.DeviceTracker.StatusCompact"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_sm"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+                android:layout_marginStart="@dimen/space_md"
+                android:background="@drawable/bg_panel_survey_secondary"
+                android:gravity="center"
+                android:minWidth="96dp"
+                android:paddingStart="@dimen/space_md"
+                android:paddingTop="@dimen/space_sm"
+                android:paddingEnd="@dimen/space_md"
+                android:paddingBottom="@dimen/space_sm"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAlignment="center" />
         </LinearLayout>
 
         <LinearLayout
@@ -74,37 +95,43 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_sm"
-            android:background="@drawable/bg_state_panel"
+            android:background="@drawable/bg_state_panel_survey"
             android:orientation="vertical"
             android:padding="@dimen/space_lg"
             android:visibility="gone">
 
             <TextView
                 android:id="@+id/trackStateTitleText"
-                android:layout_width="wrap_content"
+                style="@style/TextAppearance.DeviceTracker.Overline"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:text="@string/track_empty_title" />
 
             <TextView
                 android:id="@+id/trackStateBodyText"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_xs"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
+                android:layout_marginTop="@dimen/space_sm"
+                android:breakStrategy="balanced"
+                android:hyphenationFrequency="normal"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textAlignment="viewStart"
+                android:textStyle="bold" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/trackStateActionButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_md"
+                android:layout_gravity="start"
                 android:minWidth="0dp"
+                android:paddingStart="@dimen/space_lg"
+                android:paddingEnd="@dimen/space_lg"
                 android:textAllCaps="false"
                 android:textColor="@color/surface_primary"
                 android:visibility="gone"
-                app:backgroundTint="@color/accent_icy" />
+                app:backgroundTint="@color/accent_primary" />
         </LinearLayout>
     </LinearLayout>
 

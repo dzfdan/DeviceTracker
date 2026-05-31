@@ -2,8 +2,8 @@
 <resources>
     <style name="TextAppearance.DeviceTracker.Overline" parent="TextAppearance.Material3.LabelSmall">
         <item name="android:textAllCaps">true</item>
-        <item name="android:letterSpacing">0.18</item>
-        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0.12</item>
+        <item name="android:textColor">@color/text_tertiary</item>
     </style>
 
     <style name="TextAppearance.DeviceTracker.Metric" parent="TextAppearance.Material3.DisplaySmall">
@@ -35,8 +35,8 @@
     </style>
 
     <style name="ThemeOverlay.DeviceTracker.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="colorPrimary">@color/accent_icy</item>
+        <item name="colorPrimary">@color/accent_primary</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:windowBackground">@drawable/bg_panel_glass_primary</item>
+        <item name="android:windowBackground">@drawable/bg_panel_survey_primary</item>
     </style>
 </resources>

@@ -42,6 +42,58 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.*
 
+internal data class MarkerPalette(
+    val colorToken: Int,
+    val labelFillHex: String,
+    val labelStrokeHex: String,
+    val labelTextHex: String,
+    val haloAlpha: Int
+)
+
+internal object MarkerUiStyle {
+    const val COLOR_CURRENT = R.color.marker_current
+    const val COLOR_ONLINE = R.color.marker_other
+    const val COLOR_OFFLINE = R.color.marker_offline
+
+    const val LABEL_FILL_HIGHLIGHT = "#D924322D"
+    const val LABEL_STROKE_HIGHLIGHT = "#6F98C5A7"
+    const val LABEL_FILL_DEFAULT = "#D91D2A25"
+    const val LABEL_STROKE_DEFAULT = "#6F4B5F58"
+    const val LABEL_TEXT_DEFAULT = "#F2F5F1"
+    const val LABEL_TEXT_OFFLINE = "#C2CDC5"
+
+    fun resolve(highlight: Boolean, isOnline: Boolean): MarkerPalette {
+        return when {
+            highlight -> MarkerPalette(
+                colorToken = COLOR_CURRENT,
+                labelFillHex = LABEL_FILL_HIGHLIGHT,
+                labelStrokeHex = LABEL_STROKE_HIGHLIGHT,
+                labelTextHex = LABEL_TEXT_DEFAULT,
+                haloAlpha = 84
+            )
+            isOnline -> MarkerPalette(
+                colorToken = COLOR_ONLINE,
+                labelFillHex = LABEL_FILL_DEFAULT,
+                labelStrokeHex = LABEL_STROKE_DEFAULT,
+                labelTextHex = LABEL_TEXT_DEFAULT,
+                haloAlpha = 0
+            )
+            else -> MarkerPalette(
+                colorToken = COLOR_OFFLINE,
+                labelFillHex = LABEL_FILL_DEFAULT,
+                labelStrokeHex = LABEL_STROKE_DEFAULT,
+                labelTextHex = LABEL_TEXT_OFFLINE,
+                haloAlpha = 0
+            )
+        }
+    }
+
+    fun formatLabel(name: String): String {
+        val trimmed = name.trim()
+        return if (trimmed.length > 11) "${trimmed.take(11)}..." else trimmed
+    }
+}
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -129,8 +181,7 @@ class MainActivity : AppCompatActivity() {
             trackSummaryTemplate = getString(R.string.track_summary_compact)
         )
 
-        binding.trackFab.setImageResource(R.drawable.ic_fleet_track)
-        binding.trackFab.contentDescription = getString(R.string.start_tracking)
+        updateTrackFabPresentation(isTracking = false)
 
         binding.mapView.onCreate(savedInstanceState)
         aMap = binding.mapView.map
@@ -346,8 +397,7 @@ class MainActivity : AppCompatActivity() {
         trackPolyline?.remove()
         trackPolyline = null
         updateTrackInfo()
-        binding.trackFab.setImageResource(R.drawable.ic_fleet_close)
-        binding.trackFab.contentDescription = getString(R.string.stop_tracking)
+        updateTrackFabPresentation(isTracking = true)
         binding.trackCard.visibility = View.VISIBLE
         Toast.makeText(this, getString(R.string.tracking_started), Toast.LENGTH_SHORT).show()
         Log.d(TAG, "Tracking started")
@@ -356,10 +406,19 @@ class MainActivity : AppCompatActivity() {
     private fun stopTracking() {
         isTracking = false
         updateTrackInfo()
-        binding.trackFab.setImageResource(R.drawable.ic_fleet_track)
-        binding.trackFab.contentDescription = getString(R.string.start_tracking)
+        updateTrackFabPresentation(isTracking = false)
         Toast.makeText(this, getString(R.string.tracking_stopped), Toast.LENGTH_SHORT).show()
         Log.d(TAG, "Tracking stopped. Total points: ${trackPoints.size}")
+    }
+
+    private fun updateTrackFabPresentation(isTracking: Boolean) {
+        binding.trackFab.setImageResource(
+            if (isTracking) R.drawable.ic_fleet_close else R.drawable.ic_fleet_track
+        )
+        binding.trackFab.contentDescription = getString(
+            if (isTracking) R.string.stop_tracking else R.string.start_tracking
+        )
+        binding.trackFab.isActivated = isTracking
     }
 
     private fun updateTrackPolyline() {
@@ -410,8 +469,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun createMyLocationBitmap(): com.amap.api.maps.model.BitmapDescriptor {
         val name = DeviceInfoHelper.getDeviceName(this)
-        val color = getColorCompat(R.color.marker_current)
-        return createLabeledMarkerIcon(name = name, color = color, highlight = true)
+        val palette = MarkerUiStyle.resolve(highlight = true, isOnline = true)
+        return createLabeledMarkerIcon(
+            name = name,
+            color = getColorCompat(palette.colorToken),
+            palette = palette,
+            highlight = true
+        )
     }
 
     private fun startLocationService() {
@@ -509,15 +573,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun buildMarkerVisualState(device: DeviceLocation): MarkerVisualState {
         val highlight = device.deviceId == deviceId
-        val color = when {
-            highlight -> getColorCompat(R.color.marker_current)
-            device.isOnline -> getColorCompat(R.color.marker_other)
-            else -> getColorCompat(R.color.marker_offline)
-        }
+        val palette = MarkerUiStyle.resolve(highlight = highlight, isOnline = device.isOnline)
         return MarkerVisualState(
             label = device.deviceName.ifBlank { getString(R.string.unknown_device) },
-            color = color,
-            highlight = highlight
+            color = getColorCompat(palette.colorToken),
+            highlight = highlight,
+            palette = palette
         )
     }
 
@@ -526,6 +587,7 @@ class MainActivity : AppCompatActivity() {
             createLabeledMarkerIcon(
                 name = state.label,
                 color = state.color,
+                palette = state.palette,
                 highlight = state.highlight
             )
         }
@@ -534,82 +596,87 @@ class MainActivity : AppCompatActivity() {
     private fun createLabeledMarkerIcon(
         name: String,
         color: Int,
+        palette: MarkerPalette,
         highlight: Boolean
     ): com.amap.api.maps.model.BitmapDescriptor {
         val metrics = resources.displayMetrics
-        val width = dp(metrics, 110f).toInt()
-        val height = dp(metrics, 120f).toInt()
+        val width = dp(metrics, 104f).toInt()
+        val height = dp(metrics, 108f).toInt()
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
         val cx = width / 2f
-        val circleCy = dp(metrics, 41f)
-        val circleRadius = dp(metrics, 17f)
+        val circleCy = dp(metrics, 32f)
+        val circleRadius = dp(metrics, 13f)
 
-        if (highlight) {
+        if (highlight && palette.haloAlpha > 0) {
             val haloPaint = Paint().apply {
                 this.color = color
-                alpha = 85
+                alpha = palette.haloAlpha
                 isAntiAlias = true
             }
-            canvas.drawCircle(cx, circleCy, circleRadius + dp(metrics, 11f), haloPaint)
+            canvas.drawCircle(cx, circleCy, circleRadius + dp(metrics, 6f), haloPaint)
         }
 
         val pinPaint = Paint().apply {
             this.color = color
             isAntiAlias = true
         }
+        val pinSurfacePaint = Paint().apply {
+            this.color = Color.parseColor("#CC0F1814")
+            isAntiAlias = true
+        }
         val centerPaint = Paint().apply {
-            this.color = Color.parseColor("#08111E")
+            this.color = Color.parseColor("#F2F5F1")
             isAntiAlias = true
         }
         val borderPaint = Paint().apply {
-            this.color = Color.parseColor("#DDEBFF")
+            this.color = Color.parseColor("#4B5F58")
             style = Paint.Style.STROKE
-            strokeWidth = dp(metrics, 1.75f)
+            strokeWidth = dp(metrics, 1.25f)
             isAntiAlias = true
         }
+        canvas.drawCircle(cx, circleCy, circleRadius + dp(metrics, 3f), pinSurfacePaint)
         canvas.drawCircle(cx, circleCy, circleRadius, pinPaint)
-        canvas.drawCircle(cx, circleCy, dp(metrics, 6f), centerPaint)
-        canvas.drawCircle(cx, circleCy, circleRadius, borderPaint)
+        canvas.drawCircle(cx, circleCy, dp(metrics, 4.5f), centerPaint)
+        canvas.drawCircle(cx, circleCy, circleRadius + dp(metrics, 3f), borderPaint)
 
         val tail = Path().apply {
-            moveTo(cx, circleCy + circleRadius - dp(metrics, 2f))
-            lineTo(cx - dp(metrics, 8f), circleCy + circleRadius + dp(metrics, 17f))
-            lineTo(cx + dp(metrics, 8f), circleCy + circleRadius + dp(metrics, 17f))
+            moveTo(cx, circleCy + circleRadius - dp(metrics, 1f))
+            lineTo(cx - dp(metrics, 6f), circleCy + circleRadius + dp(metrics, 14f))
+            lineTo(cx + dp(metrics, 6f), circleCy + circleRadius + dp(metrics, 14f))
             close()
         }
         canvas.drawPath(tail, pinPaint)
-        canvas.drawPath(tail, borderPaint)
 
-        val horizontalPadding = dp(metrics, 14f)
+        val horizontalPadding = dp(metrics, 10f)
         val labelRect = RectF(
             horizontalPadding,
-            dp(metrics, 84f),
+            dp(metrics, 62f),
             width - horizontalPadding,
-            dp(metrics, 107f)
+            dp(metrics, 84f)
         )
         val labelBg = Paint().apply {
-            this.color = Color.parseColor("#D9152B44")
+            this.color = Color.parseColor(palette.labelFillHex)
             isAntiAlias = true
         }
         val labelBorder = Paint().apply {
-            this.color = Color.parseColor("#55D9ECFF")
+            this.color = Color.parseColor(palette.labelStrokeHex)
             style = Paint.Style.STROKE
             strokeWidth = dp(metrics, 1f)
             isAntiAlias = true
         }
         val labelText = Paint().apply {
-            this.color = Color.parseColor("#F2F7FF")
+            this.color = Color.parseColor(palette.labelTextHex)
             textAlign = Paint.Align.CENTER
-            textSize = sp(metrics, 12f)
+            textSize = sp(metrics, 10.5f)
             isAntiAlias = true
         }
-        val labelRadius = dp(metrics, 11f)
+        val labelRadius = dp(metrics, 10f)
         canvas.drawRoundRect(labelRect, labelRadius, labelRadius, labelBg)
         canvas.drawRoundRect(labelRect, labelRadius, labelRadius, labelBorder)
 
-        val displayName = if (name.length > 12) name.take(12) + "..." else name
+        val displayName = MarkerUiStyle.formatLabel(name)
         val textY = labelRect.centerY() - ((labelText.descent() + labelText.ascent()) / 2f)
         canvas.drawText(displayName, cx, textY, labelText)
 
@@ -629,6 +696,9 @@ class MainActivity : AppCompatActivity() {
         if (parts.size >= 2) {
             statusText.text = parts[0]
             timeText.text = getString(R.string.last_seen, parts[1])
+        } else {
+            statusText.text = snippet
+            timeText.text = ""
         }
 
         if (marker.`object` == deviceId) {
@@ -705,6 +775,7 @@ class MainActivity : AppCompatActivity() {
     private data class MarkerVisualState(
         val label: String,
         val color: Int,
-        val highlight: Boolean
+        val highlight: Boolean,
+        val palette: MarkerPalette
     )
 }

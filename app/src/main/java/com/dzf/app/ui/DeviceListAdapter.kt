@@ -4,10 +4,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import com.google.android.material.button.MaterialButton
 import androidx.recyclerview.widget.RecyclerView
+import androidx.core.content.ContextCompat
 import com.dzf.app.R
 import com.dzf.app.model.DeviceLocation
+import com.google.android.material.button.MaterialButton
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -49,10 +50,16 @@ class DeviceListAdapter(
             val state = if (item.isOnline) context.getString(R.string.online) else context.getString(R.string.offline)
             val time = timeFormat.format(Date(item.timestamp))
             nameText.text = item.deviceName.ifBlank { context.getString(R.string.unknown_device) }
+            statusText.text = context.getString(R.string.last_seen, time)
             idText.text = context.getString(R.string.device_id_value, item.deviceId)
             statusChip.text = state
-            statusChip.setBackgroundResource(if (item.isOnline) R.drawable.bg_chip_status_online else R.drawable.bg_chip_status_offline)
-            statusText.text = context.getString(R.string.last_seen, time)
+            statusChip.setBackgroundResource(R.drawable.bg_status_chip)
+            statusChip.setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    if (item.isOnline) R.color.accent_positive else R.color.text_tertiary
+                )
+            )
             trackButton.setOnClickListener {
                 onTrackClick(item)
             }

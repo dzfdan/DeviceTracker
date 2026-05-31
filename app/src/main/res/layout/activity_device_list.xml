@@ -11,15 +11,21 @@
         android:orientation="vertical"
         android:paddingStart="@dimen/space_lg"
         android:paddingTop="@dimen/space_md"
-        android:paddingEnd="@dimen/space_lg">
+        android:paddingEnd="@dimen/space_lg"
+        android:paddingBottom="@dimen/space_md">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             style="@style/Widget.DeviceTracker.Toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@drawable/bg_panel_survey_primary"
             android:contentInsetStartWithNavigation="0dp"
             android:minHeight="56dp"
+            android:paddingStart="@dimen/space_md"
+            android:paddingTop="@dimen/space_sm"
+            android:paddingEnd="@dimen/space_md"
+            android:paddingBottom="@dimen/space_sm"
             app:navigationIcon="@drawable/ic_fleet_close"
             app:subtitle="@string/live_location_network"
             app:title="@string/device_list_title" />
@@ -28,8 +34,10 @@
             android:id="@+id/listStatePanel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:accessibilityLiveRegion="polite"
             android:layout_marginTop="@dimen/space_sm"
-            android:background="@drawable/bg_state_panel"
+            android:background="@drawable/bg_state_panel_survey"
+            android:importantForAccessibility="yes"
             android:orientation="vertical"
             android:padding="@dimen/space_md"
             android:visibility="gone">
@@ -38,17 +46,14 @@
                 android:id="@+id/listStateTitleText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                style="@style/TextAppearance.DeviceTracker.EmphasisCompact" />
 
             <TextView
                 android:id="@+id/listStateBodyText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_xs"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
+                style="@style/TextAppearance.DeviceTracker.StatusCompact" />
         </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
@@ -57,7 +62,8 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:paddingTop="@dimen/space_md"
+            android:layout_marginTop="@dimen/space_sm"
+            android:paddingTop="@dimen/space_xs"
             android:paddingBottom="@dimen/space_lg" />
     </LinearLayout>
 

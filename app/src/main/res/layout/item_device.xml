@@ -4,7 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="@dimen/space_sm"
-    android:background="@drawable/bg_panel_glass_secondary"
+    android:background="@drawable/bg_panel_survey_secondary"
+    android:gravity="center_vertical"
+    android:minHeight="112dp"
     android:orientation="vertical"
     android:padding="@dimen/space_md">
 
@@ -19,42 +21,53 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textColor="@color/text_primary"
-            android:textSize="18sp"
+            android:textSize="17sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/deviceStatusChip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/bg_status_chip"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="1"
+            android:minWidth="70dp"
             android:paddingStart="@dimen/space_sm"
             android:paddingTop="@dimen/space_xs"
             android:paddingEnd="@dimen/space_sm"
             android:paddingBottom="@dimen/space_xs"
-            android:textColor="@color/text_primary"
-            android:textSize="12sp" />
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp"
+            android:textStyle="bold" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/deviceStatusText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xs"
+        android:ellipsize="end"
+        android:maxLines="1"
+        style="@style/TextAppearance.DeviceTracker.StatusCompact" />
 
     <TextView
         android:id="@+id/deviceIdText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/space_xs"
-        android:textColor="@color/text_muted"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/text_tertiary"
         android:textSize="12sp" />
-
-    <TextView
-        android:id="@+id/deviceStatusText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_sm"
-        android:textColor="@color/text_secondary"
-        android:textSize="14sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_sm"
+        android:layout_marginTop="@dimen/space_md"
         android:gravity="end"
         android:orientation="horizontal">
 
@@ -65,12 +78,17 @@
             android:layout_marginEnd="@dimen/space_xs"
             android:insetTop="0dp"
             android:insetBottom="0dp"
+            android:minHeight="48dp"
             android:text="@string/export_today_timeline"
             android:textAllCaps="false"
-            android:textColor="@color/text_primary"
-            app:backgroundTint="@color/surface_panel"
+            android:textColor="@color/text_secondary"
+            app:backgroundTint="@android:color/transparent"
             app:icon="@drawable/ic_fleet_export"
-            app:strokeColor="@color/stroke_subtle" />
+            app:iconTint="@color/text_secondary"
+            app:rippleColor="@color/surface_chip"
+            app:cornerRadius="18dp"
+            app:strokeColor="@color/stroke_subtle"
+            app:strokeWidth="1dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/trackButton"
@@ -78,11 +96,17 @@
             android:layout_height="wrap_content"
             android:insetTop="0dp"
             android:insetBottom="0dp"
+            android:minHeight="48dp"
             android:text="@string/view_track"
             android:textAllCaps="false"
-            android:textColor="@color/surface_primary"
-            app:backgroundTint="@color/accent_icy"
-            app:icon="@drawable/ic_fleet_track" />
+            android:textColor="@color/text_primary"
+            app:backgroundTint="@android:color/transparent"
+            app:icon="@drawable/ic_fleet_track"
+            app:iconTint="@color/accent_primary"
+            app:rippleColor="@color/surface_chip"
+            app:cornerRadius="18dp"
+            app:strokeColor="@color/accent_secondary"
+            app:strokeWidth="1dp" />
     </LinearLayout>
 
 </LinearLayout>

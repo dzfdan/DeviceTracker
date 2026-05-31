@@ -163,7 +163,12 @@ class DeviceTrackActivity : AppCompatActivity() {
         }
     }
 
-    private fun showTrackState(title: String, body: String, actionText: String, action: () -> Unit) {
+    private fun showTrackState(
+        title: String,
+        body: String,
+        actionText: String,
+        action: () -> Unit
+    ) {
         binding.trackStateTitleText.text = title
         binding.trackStateBodyText.text = body
         binding.trackStateActionButton.text = actionText
