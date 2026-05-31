@@ -1,13 +1,13 @@
 package com.dzf.app.ui
 
-import android.widget.TextView
 import android.view.View
+import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dzf.app.R
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,31 +23,24 @@ class MainActivityChromeTest {
                 // is inflated by the real activity and view binding lifecycle.
                 val fleetOverviewCard = activity.findViewById<View>(R.id.fleetOverviewCard)
                 val networkStatusText = activity.findViewById<View>(R.id.networkStatusText)
-                val trackStatusCard = activity.findViewById<View>(R.id.trackStatusCard)
                 val mainStatePanel = activity.findViewById<View>(R.id.mainStatePanel)
-                val trackFab = activity.findViewById<View>(R.id.trackFab)
                 val myLocationFab = activity.findViewById<View>(R.id.myLocationFab)
-                val trackInfoText = activity.findViewById<TextView>(R.id.trackInfoText)
                 val deviceCountText = activity.findViewById<TextView>(R.id.deviceCountText)
 
                 assertNotNull(fleetOverviewCard)
                 assertNotNull(networkStatusText)
-                assertNotNull(trackStatusCard)
                 assertNotNull(mainStatePanel)
-                assertNotNull(trackFab)
                 assertNotNull(myLocationFab)
-                assertNotNull(trackInfoText)
                 assertNotNull(deviceCountText)
+                assertEquals(0, activity.resources.getIdentifier("trackStatusCard", "id", activity.packageName))
+                assertEquals(0, activity.resources.getIdentifier("trackFab", "id", activity.packageName))
+                assertEquals(0, activity.resources.getIdentifier("trackInfoText", "id", activity.packageName))
 
                 assertEquals(View.VISIBLE, fleetOverviewCard.visibility)
                 assertEquals(View.VISIBLE, networkStatusText.visibility)
-                assertEquals(View.VISIBLE, trackStatusCard.visibility)
-                assertEquals(View.VISIBLE, trackFab.visibility)
                 assertEquals(View.VISIBLE, myLocationFab.visibility)
                 assertEquals(View.GONE, mainStatePanel.visibility)
-                assertEquals(activity.getString(R.string.track_status_idle), trackInfoText.text.toString())
                 assertEquals("0", deviceCountText.text.toString())
-                assertEquals(activity.getString(R.string.start_tracking), trackFab.contentDescription.toString())
             }
         }
     }

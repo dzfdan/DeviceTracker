@@ -93,3 +93,43 @@ def test_marker_ui_style_does_not_use_const_resource_ids():
     assert "const val COLOR_CURRENT" not in activity_source
     assert "const val COLOR_ONLINE" not in activity_source
     assert "const val COLOR_OFFLINE" not in activity_source
+
+
+def test_home_layout_no_longer_contains_track_fab():
+    layout_source = Path(
+        "app/src/main/res/layout/activity_main.xml"
+    ).read_text(encoding="utf-8")
+
+    assert 'android:id="@+id/trackFab"' not in layout_source
+
+
+def test_home_layout_no_longer_contains_track_card():
+    layout_source = Path(
+        "app/src/main/res/layout/activity_main.xml"
+    ).read_text(encoding="utf-8")
+
+    assert 'android:id="@+id/trackCard"' not in layout_source
+
+
+def test_home_tracking_business_flow_uses_device_list_navigation_abstraction():
+    business_test_source = Path(
+        "tests/appium/business/test_tracking_flow.py"
+    ).read_text(encoding="utf-8")
+
+    assert "from tests.appium.flows.navigation_flow import NavigationFlow" in business_test_source
+    assert "NavigationFlow(pages).open_device_list()" in business_test_source
+    assert "ensure_my_location_fab_visible" not in business_test_source
+
+
+def test_strings_xml_no_longer_contains_removed_home_tracking_strings():
+    strings_source = Path(
+        "app/src/main/res/values/strings.xml"
+    ).read_text(encoding="utf-8")
+
+    assert 'name="track_recording"' not in strings_source
+    assert 'name="start_tracking"' not in strings_source
+    assert 'name="stop_tracking"' not in strings_source
+    assert 'name="track_summary_compact"' not in strings_source
+    assert 'name="tracking_started"' not in strings_source
+    assert 'name="tracking_stopped"' not in strings_source
+    assert 'name="track_status_idle"' not in strings_source

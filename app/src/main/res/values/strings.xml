@@ -19,14 +19,8 @@
     <string name="last_seen">最后在线：%1$s</string>
     <string name="this_device">本机设备</string>
     <string name="unknown_device">未知设备</string>
-    <string name="track_recording">轨迹记录</string>
-    <string name="start_tracking">开始追踪</string>
-    <string name="stop_tracking">停止追踪</string>
     <string name="track_info">轨迹点：%1$d | 距离：%2$.2f 公里</string>
     <string name="track_summary_template">%1$d 个轨迹点 • %2$.2f 公里</string>
-    <string name="track_summary_compact">%1$d 点 / %2$.1f 公里</string>
-    <string name="tracking_started">已开始追踪</string>
-    <string name="tracking_stopped">已停止追踪</string>
     <string name="device_list_title">设备列表</string>
     <string name="device_id_value">ID：%1$s</string>
     <string name="device_list_empty_title">设备列表为空</string>
@@ -47,7 +41,6 @@
     <string name="track_error_body">暂时无法加载这段轨迹，原因：%1$s</string>
     <string name="track_return_action">返回实时地图</string>
     <string name="track_retry_action">重新加载</string>
-    <string name="track_status_idle">待命中</string>
     <string name="close">关闭</string>
     <string name="export_failed">导出失败：%1$s</string>
     <string name="export_empty_timeline">今日暂无可导出的时间线数据</string>

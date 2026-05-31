@@ -3,10 +3,8 @@ package com.dzf.app.ui
 object FleetUiFormatter {
     data class Resources(
         val readyText: String,
-        val idleTrackText: String,
         val fleetOnlineQuantity: (Int) -> String,
-        val fleetRefreshedTemplate: String,
-        val trackSummaryTemplate: String
+        val fleetRefreshedTemplate: String
     )
 
     fun formatFleetStatus(
@@ -28,27 +26,6 @@ object FleetUiFormatter {
             formatFleetStatus(deviceCount, lastRefreshAgeSeconds, resources)
         } else {
             resources.readyText
-        }
-    }
-
-    fun formatTrackSummary(
-        pointCount: Int,
-        distanceKm: Double,
-        resources: Resources
-    ): String {
-        return resources.trackSummaryTemplate.format(pointCount, distanceKm)
-    }
-
-    fun formatTrackSummaryOrIdle(
-        pointCount: Int,
-        distanceKm: Double,
-        isTracking: Boolean,
-        resources: Resources
-    ): String {
-        return if (isTracking) {
-            formatTrackSummary(pointCount, distanceKm, resources)
-        } else {
-            resources.idleTrackText
         }
     }
 }

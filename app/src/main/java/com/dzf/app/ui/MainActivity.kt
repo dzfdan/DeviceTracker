@@ -26,7 +26,6 @@ import com.amap.api.maps.model.BitmapDescriptorFactory
 import com.amap.api.maps.model.LatLng
 import com.amap.api.maps.model.Marker
 import com.amap.api.maps.model.MarkerOptions
-import com.amap.api.maps.model.PolylineOptions
 import com.dzf.app.R
 import com.dzf.app.databinding.ActivityMainBinding
 import com.dzf.app.model.DeviceLocation
@@ -40,7 +39,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.*
 
 internal data class MarkerPalette(
     val colorToken: Int,
@@ -111,10 +109,6 @@ class MainActivity : AppCompatActivity() {
     private var hasStartedTracking = false
     private lateinit var formatterResources: FleetUiFormatter.Resources
 
-    private val trackPoints = mutableListOf<LatLng>()
-    private var trackPolyline: com.amap.api.maps.model.Polyline? = null
-    private var isTracking = false
-
     private val refreshInterval: Long = 15000
     private val mapLoadTimeoutMs: Long = 8_000
     private var lastFleetRefreshMs: Long = System.currentTimeMillis()
@@ -175,13 +169,9 @@ class MainActivity : AppCompatActivity() {
         deviceId = DeviceInfoHelper.getDeviceId(this)
         formatterResources = FleetUiFormatter.Resources(
             readyText = getString(R.string.sync_status_ready),
-            idleTrackText = getString(R.string.track_status_idle),
             fleetOnlineQuantity = { count -> resources.getQuantityString(R.plurals.fleet_online_count, count) },
-            fleetRefreshedTemplate = getString(R.string.fleet_status_refreshed),
-            trackSummaryTemplate = getString(R.string.track_summary_compact)
+            fleetRefreshedTemplate = getString(R.string.fleet_status_refreshed)
         )
-
-        updateTrackFabPresentation(isTracking = false)
 
         binding.mapView.onCreate(savedInstanceState)
         aMap = binding.mapView.map
@@ -193,10 +183,6 @@ class MainActivity : AppCompatActivity() {
 
         binding.myLocationFab.setOnClickListener {
             moveToMyLocation()
-        }
-
-        binding.trackFab.setOnClickListener {
-            toggleTracking()
         }
 
         aMap.setOnMapLoadedListener {
@@ -307,12 +293,6 @@ class MainActivity : AppCompatActivity() {
         val latLng = stabilizeMyLocation(rawLatLng) ?: return
         Log.d(TAG, "Updating my location on map: lat=${latLng.latitude}, lng=${latLng.longitude}")
 
-        if (isTracking) {
-            trackPoints.add(latLng)
-            updateTrackPolyline()
-            updateTrackInfo()
-        }
-
         if (myLocationMarker == null) {
             val markerOptions = MarkerOptions()
                 .position(latLng)
@@ -381,90 +361,6 @@ class MainActivity : AppCompatActivity() {
         pendingMyLatLng = null
         pendingMyCount = 0
         return newLatLng
-    }
-
-    private fun toggleTracking() {
-        if (isTracking) {
-            stopTracking()
-        } else {
-            startTracking()
-        }
-    }
-
-    private fun startTracking() {
-        isTracking = true
-        trackPoints.clear()
-        trackPolyline?.remove()
-        trackPolyline = null
-        updateTrackInfo()
-        updateTrackFabPresentation(isTracking = true)
-        binding.trackCard.visibility = View.VISIBLE
-        Toast.makeText(this, getString(R.string.tracking_started), Toast.LENGTH_SHORT).show()
-        Log.d(TAG, "Tracking started")
-    }
-
-    private fun stopTracking() {
-        isTracking = false
-        updateTrackInfo()
-        updateTrackFabPresentation(isTracking = false)
-        Toast.makeText(this, getString(R.string.tracking_stopped), Toast.LENGTH_SHORT).show()
-        Log.d(TAG, "Tracking stopped. Total points: ${trackPoints.size}")
-    }
-
-    private fun updateTrackFabPresentation(isTracking: Boolean) {
-        binding.trackFab.setImageResource(
-            if (isTracking) R.drawable.ic_fleet_close else R.drawable.ic_fleet_track
-        )
-        binding.trackFab.contentDescription = getString(
-            if (isTracking) R.string.stop_tracking else R.string.start_tracking
-        )
-        binding.trackFab.isActivated = isTracking
-    }
-
-    private fun updateTrackPolyline() {
-        if (trackPoints.size < 2) return
-
-        trackPolyline?.remove()
-
-        trackPolyline = aMap.addPolyline(
-            PolylineOptions()
-                .addAll(trackPoints)
-                .color(Color.parseColor("#1976D2"))
-                .width(10f)
-                .geodesic(true)
-        )
-    }
-
-    private fun updateTrackInfo() {
-        val distance = calculateTotalDistance()
-        binding.trackInfoText.text = FleetUiFormatter.formatTrackSummaryOrIdle(
-            pointCount = trackPoints.size,
-            distanceKm = distance,
-            isTracking = isTracking,
-            resources = formatterResources
-        )
-    }
-
-    private fun calculateTotalDistance(): Double {
-        var totalDistance = 0.0
-        for (i in 1 until trackPoints.size) {
-            totalDistance += calculateDistance(
-                trackPoints[i - 1].latitude, trackPoints[i - 1].longitude,
-                trackPoints[i].latitude, trackPoints[i].longitude
-            )
-        }
-        return totalDistance / 1000
-    }
-
-    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val earthRadius = 6371000.0
-        val dLat = Math.toRadians(lat2 - lat1)
-        val dLon = Math.toRadians(lon2 - lon1)
-        val a = sin(dLat / 2) * sin(dLat / 2) +
-                cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
-                sin(dLon / 2) * sin(dLon / 2)
-        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        return earthRadius * c
     }
 
     private fun createMyLocationBitmap(): com.amap.api.maps.model.BitmapDescriptor {

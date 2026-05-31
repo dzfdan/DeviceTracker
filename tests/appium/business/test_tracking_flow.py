@@ -1,12 +1,10 @@
 import pytest
 
-from tests.appium.flows.tracking_flow import TrackingFlow
+from tests.appium.flows.navigation_flow import NavigationFlow
 
 
 @pytest.mark.business
 @pytest.mark.local_device
-def test_start_and_stop_tracking(pages):
-    flow = TrackingFlow(pages)
+def test_home_fleet_card_opens_device_list(pages):
     pages["main"].wait_loaded()
-    flow.toggle_tracking()
-    flow.toggle_tracking()
+    NavigationFlow(pages).open_device_list()
