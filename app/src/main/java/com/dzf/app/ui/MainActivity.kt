@@ -51,9 +51,9 @@ internal data class MarkerPalette(
 )
 
 internal object MarkerUiStyle {
-    const val COLOR_CURRENT = R.color.marker_current
-    const val COLOR_ONLINE = R.color.marker_other
-    const val COLOR_OFFLINE = R.color.marker_offline
+    val COLOR_CURRENT = R.color.marker_current
+    val COLOR_ONLINE = R.color.marker_other
+    val COLOR_OFFLINE = R.color.marker_offline
 
     const val LABEL_FILL_HIGHLIGHT = "#D924322D"
     const val LABEL_STROKE_HIGHLIGHT = "#6F98C5A7"

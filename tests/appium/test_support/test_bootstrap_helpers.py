@@ -83,3 +83,13 @@ def test_tool_button_drawable_defines_disabled_state():
     ).read_text(encoding="utf-8")
 
     assert 'android:state_enabled="false"' in drawable_source
+
+
+def test_marker_ui_style_does_not_use_const_resource_ids():
+    activity_source = Path(
+        "app/src/main/java/com/dzf/app/ui/MainActivity.kt"
+    ).read_text(encoding="utf-8")
+
+    assert "const val COLOR_CURRENT" not in activity_source
+    assert "const val COLOR_ONLINE" not in activity_source
+    assert "const val COLOR_OFFLINE" not in activity_source
